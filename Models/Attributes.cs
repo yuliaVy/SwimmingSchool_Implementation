@@ -20,9 +20,9 @@ namespace SwimmingSchool_Implementation.Models
                 }
 
                 //ensures the user is at least 18 years old
-                if (date.Date > DateTime.Now.AddYears(-18).Date)
+                if (date.Date < DateTime.Now.AddYears(-18).Date)
                 {
-                    return new ValidationResult("You must be at least 18 years old.");
+                    return new ValidationResult("Studetn can't be older than 18 years old.");
                 }
             }
             return ValidationResult.Success;

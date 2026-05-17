@@ -1,0 +1,110 @@
+﻿@model IEnumerable<SwimmingSchool_Implementation.Models.User>
+@{
+        ViewData["Title"] = "Meet the Team";
+    }
+
+<style>
+        /* New Grid Layout Styles */
+        .team-page-wrapper {
+            font-family: 'Poppins', sans-serif;
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Top Introduction Section */
+        .team-intro {
+            margin-bottom: 60px;
+        }
+
+            .team-intro h1 {
+                color: #1A365D; /* Navy blue to match the card titles */
+                font-weight: 700;
+                font-size: 2.5rem;
+                margin-bottom: 25px;
+            }
+
+            .team-intro p {
+                color: #4A4A4A;
+                font-size: 1.05rem;
+                line-height: 1.6;
+                margin-bottom: 15px;
+                max-width: 1000px;
+            }
+
+        /* Card Grid */
+        .team-card {
+            background: #ffffff;
+            border: 1px solid #EBEBEB; /* Subtle border from your reference image */
+            border-radius: 6px;
+            padding: 30px 20px;
+            height: 100%;
+            text-align: left;
+            transition: box-shadow 0.3s ease;
+        }
+
+            .team-card:hover {
+                box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            }
+
+            /* Circular Image */
+            .team-card img {
+                width: 100%;
+                aspect-ratio: 1 / 1; /* Forces the image into a perfect square before rounding */
+                object-fit: cover; /* Prevents the image from stretching/distorting */
+                border-radius: 50%; /* Makes it a circle */
+                margin-bottom: 25px;
+            }
+
+            /* Instructor Name */
+            .team-card h3 {
+                color: #1A365D; /* Dark blue matching your reference */
+                font-size: 1.4rem;
+                font-weight: 600;
+                margin-bottom: 15px;
+            }
+
+            /* Instructor Bio */
+            .team-card p {
+                color: #555555;
+                font-size: 0.95rem;
+                line-height: 1.5;
+                margin-bottom: 0;
+            }
+    </style>
+
+    <div class="team-page-wrapper">
+
+        <div class="team-intro">
+            <h1>Introduce The Team</h1>
+            <p>Our team is made up of dedicated and passionate individuals who are committed to helping people of all ages and abilities learn to swim. With years of experience and a love for the water, we strive to create a safe, supportive, and enjoyable environment for our students.</p>
+            <p>In addition to our core team of instructors, we also have friendly support staff available to answer any questions or concerns you may have. We are excited to work with you and help you or your loved ones feel confident in the water. Don't hesitate to reach out to us with any queries or to book a lesson.</p>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+
+            @foreach (var teacher in Model)
+            {
+                <div class="col">
+                    <div class="team-card">
+                        <img src="~/Content/Images/@teacher.ProfileImage"
+                             class="teacher-image img-fluid"
+                             alt="@teacher.FirstName" />
+                        <h3>@teacher.FirstName</h3>
+
+                        <p>
+                            @if (!string.IsNullOrEmpty(teacher.Bio))
+                            {
+                                @teacher.Bio
+                            }
+                            else
+                            {
+                                @($"{teacher.FirstName} is a dedicated swimming instructor passionate about helping students gain confidence in the water.")
+                            }
+                        </p>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>

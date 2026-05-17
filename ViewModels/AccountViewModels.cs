@@ -65,31 +65,24 @@ namespace SwimmingSchool_Implementation.Models
 
     public class RegisterViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "You must provide an emailr")]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "You must provide your First Name")]
         [RegularExpression(@"^[a-zA-Z]*$", ErrorMessage = "Use valid symbols in your First Name")]
-        [MaxLength(30, ErrorMessage = "Second name can't be less then 2 and more then 30 characters"), MinLength(2)]
+        [MaxLength(30, ErrorMessage = "Your First name  can't be less then 2 and more then 30 characters"), MinLength(2)]
         [Display(Name = "First Name")]
         public string FirstName { get; set; }
 
         [Required]
         [RegularExpression(@"^[a-zA-Z]*$", ErrorMessage = "Use valid symbols in your Second Name")]
-        [MaxLength(40, ErrorMessage = "Second name can't be less then 2 and more then 40 characters"), MinLength(2)]
+        [MaxLength(40, ErrorMessage = "Your Second name can't be less then 2 and more then 40 characters"), MinLength(2)]
         [Display(Name = "Second Name")]
         public string SecondName { get; set; }
 
-        [Required(ErrorMessage = "Please enter your Date of Birth.")]
-        [DataType(DataType.Date)]
-        [ValidDate]
-        [Display(Name = "Date of Birth")]
-        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-        public DateTime DateOfBirth { get; set; }
-
-        [Required(ErrorMessage = "You must provide a mobile phone number")]
+        //[Required(ErrorMessage = "You must provide a mobile phone number")]
         [Display(Name = "Mobile Number")]
         [DataType(DataType.PhoneNumber)]
         [RegularExpression(@"^\(?([0-9]{3})\)?[-. ]?([0-9]{4})[-. ]?([0-9]{4})$", ErrorMessage = "Not a valid mobile number")]
@@ -105,7 +98,79 @@ namespace SwimmingSchool_Implementation.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+
+
+        public List<StudentViewModel> Students { get; set; }
+
+        public int SelectedLessonId{ get; set; }
+
+        public string PaymentMethod { get; set; }
+
+        public List<int> AcceptedPolicies { get; set; }
+
+        public string Comments { get; set; }
     }
+
+    public class StudentViewModel
+    {
+        public bool IsAccountHolder { get; set; }
+
+        public List<int> AcceptedPolicyIds { get; set; }
+
+        [Required]
+        [RegularExpression(@"^[a-zA-Z]*$", ErrorMessage = "Use valid symbols in student's First Name")]
+        [MaxLength(30, ErrorMessage = "Student's first name can't be less then 2 and more then 30 characters"), MinLength(2)]
+        [Display(Name = "Student's First Name")]
+        public string FirstName { get; set; }
+
+        [Required]
+        [RegularExpression(@"^[a-zA-Z]*$", ErrorMessage = "Use valid symbols in student's Second Name")]
+        [MaxLength(40, ErrorMessage = "Student's econd name can't be less then 2 and more then 40 characters"), MinLength(2)]
+        [Display(Name = "Student's Second Name")]
+        public string LastName { get; set; }
+
+        [Required]
+        public string Gender { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
+        public DateTime BirthDate { get; set; }
+
+        // Specific to this student's booking
+        [Required(ErrorMessage = "You must select a lesson for this student.")]
+        public int SelectedLessonId { get; set; }
+        public string SelectedLessonTitle { get; set; }
+        public decimal LessonPrice { get; set; }
+
+        [Required(ErrorMessage = "You must accept the policies.")]
+        public List<int> AcceptedPolicies { get; set; } = new List<int>();
+
+        public string MedicalConditions { get; set; }
+
+        public string Allergies { get; set; }
+
+        public string Medications { get; set; }
+
+        public string ImmunizationNotes { get; set; }
+
+        public string AquaticGoals { get; set; }
+
+        public string SwimExperience { get; set; }
+    }
+
+    public class RegistrationSuccessViewModel
+    {
+        public User User { get; set; }
+
+        public List<Booking> Bookings { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public DateTime RegistrationDate { get; set; }
+    }
+
 
     public class ResetPasswordViewModel
     {

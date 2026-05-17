@@ -10,7 +10,12 @@ using System.Threading.Tasks;
 
 namespace SwimmingSchool_Implementation.Models
 {
-    // You can add profile data for the user by adding more properties to your ApplicationUser class, please visit https://go.microsoft.com/fwlink/?LinkID=317594 to learn more.
+    public enum TeacherPreference
+    {
+        Kids,
+        Adults,
+        Both
+    }
     public class User : IdentityUser
     {
         [Required]
@@ -41,13 +46,10 @@ namespace SwimmingSchool_Implementation.Models
         [Display(Name = "Country")] 
         public string Country { get; set; }
 
-
-        [Required(ErrorMessage = "Please enter your Date of Birth.")]
         [DataType(DataType.Date)]
-        [ValidDate]
         [Display(Name = "Date of Birth")]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "You must provide a mobile phone number")]
         [Display(Name = "Mobile Number")]
@@ -57,10 +59,14 @@ namespace SwimmingSchool_Implementation.Models
 
         [DataType(DataType.DateTime)]
         [Display(Name = "Registered At")]
-        public DateTime DateRegistered { get; set; } = DateTime.Now;
+        public DateTime? DateRegistered { get; set; } = DateTime.Now;
+
+        public string ProfileImage { get; set; }
+
+        public string Bio { get; set; }
+        public TeacherPreference TeacherPreference { get; set; } = TeacherPreference.Both;
 
 
-        
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<User> manager)
         {
             // Note the authenticationType must match the one defined in CookieAuthenticationOptions.AuthenticationType
@@ -68,6 +74,9 @@ namespace SwimmingSchool_Implementation.Models
             // Add custom user claims here
             return userIdentity;
         }
+
+        //navigation properties to link to the TeacherVenues table, cause teacher can teach at many venues and a venue can have many teachers
+        public virtual ICollection<TeacherVenue> TeacherVenues { get; set; }
 
         //navigation properties to link to the Bookings and Lessons tables
         // --- Teacher Connection ---
@@ -77,5 +86,8 @@ namespace SwimmingSchool_Implementation.Models
         // --- Learner Connection ---
         // A learner can make many bookings
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+        ////a learner (parent) can add many students (children)
+        //public virtual ICollection<Student> Students { get; set; }
     }
 }
