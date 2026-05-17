@@ -1,0 +1,98 @@
+﻿@model SwimmingSchool_Implementation.Models.Booking
+
+@{
+    ViewBag.Title = "Registration Successful";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="text-success border border-success rounded-circle d-inline-block p-3 mb-3">✓</h1>
+        <h2>Registration Complete!</h2>
+        <p class="lead">Here is the data that was successfully saved to the database.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking & Payment Record</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr><th>Booking ID:</th><td>@Model.BookingId</td></tr>
+                        <tr><th>Booking Date:</th><td>@Model.BookingDate.ToString("g")</td></tr>
+                        <tr><th>Status:</th><td><span class="badge bg-success">@Model.Status</span></td></tr>
+                        <tr><th>Total Amount:</th><td>£@Model.TotalAmount</td></tr>
+
+                        @if (Model.Payments != null && Model.Payments.Any())
+                        {
+                            var payment = Model.Payments.First();
+                            <tr><th>Payment Date:</th><td>@payment.PaymentDate.ToString("g")</td></tr>
+                            <tr><th>Transaction ID:</th><td><small class="text-muted">@payment.TransactionId</small></td></tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Parent/User Account</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr><th>Account ID:</th><td><small class="text-muted">@Model.UserId</small></td></tr>
+                        <tr><th>First Name:</th><td>@Model.User.FirstName</td></tr>
+                        <tr><th>Last Name:</th><td>@Model.User.SecondName</td></tr>
+                        <tr><th>Email (Username):</th><td>@Model.User.Email</td></tr>
+                        <tr><th>Phone:</th><td>@Model.User.PhoneNumber</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Student Profile</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr><th>Student ID:</th><td>@Model.StudentId</td></tr>
+                        <tr><th>First Name:</th><td>@Model.Student.FirstName</td></tr>
+                        <tr><th>Last Name:</th><td>@Model.Student.SecondName</td></tr>
+                        <tr><th>Gender:</th><td>@Model.Student.Gender</td></tr>
+                        <tr><th>Date of Birth:</th><td>@Model.Student.DateOfBirth.ToString("dd MMM yyyy")</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Enrolled Lessons</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.LessonsBookings != null && Model.LessonsBookings.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var lb in Model.LessonsBookings)
+                            {
+                                <li class="list-group-item px-0">
+                                    <strong>@lb.Lesson.Title</strong><br />
+                                    <span class="text-muted">Day: @lb.Lesson.DayOfWeek | Price: £@lb.Lesson.Price</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-danger">No lessons found attached to this booking!</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

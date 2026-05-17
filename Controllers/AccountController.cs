@@ -1,20 +1,30 @@
-﻿using System;
+﻿using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
+using Microsoft.Owin.Security;
+using Stripe;
+using SwimmingSchool_Implementation.Models;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
-using SwimmingSchool_Implementation.Models;
+using System.Data.Entity;
 
 namespace SwimmingSchool_Implementation.Controllers
 {
     [Authorize]
+
     public class AccountController : Controller
     {
+        //create a database context to interact with the database 
+        private SwimSchoolDbContext db = new SwimSchoolDbContext();
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
@@ -22,7 +32,7 @@ namespace SwimmingSchool_Implementation.Controllers
         {
         }
 
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
         {
             UserManager = userManager;
             SignInManager = signInManager;
@@ -34,9 +44,9 @@ namespace SwimmingSchool_Implementation.Controllers
             {
                 return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
-            private set 
-            { 
-                _signInManager = value; 
+            private set
+            {
+                _signInManager = value;
             }
         }
 
@@ -120,7 +130,7 @@ namespace SwimmingSchool_Implementation.Controllers
             // If a user enters incorrect codes for a specified amount of time then the user account 
             // will be locked out for a specified amount of time. 
             // You can configure the account lockout settings in IdentityConfig
-            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent:  model.RememberMe, rememberBrowser: model.RememberBrowser);
+            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent: model.RememberMe, rememberBrowser: model.RememberBrowser);
             switch (result)
             {
                 case SignInStatus.Success:
@@ -136,52 +146,210 @@ namespace SwimmingSchool_Implementation.Controllers
 
         //
         // GET: /Account/Register
+        /// <summary>
+        /// The user clicks the register button on the booking page, which sends a list of selected lesson IDs to this action.
+        /// There's no option for user to register without booking a lesson, so we can assume that the list of lesson IDs will always be provided when the user clicks register.
+        /// </summary>
         [AllowAnonymous]
-        public ActionResult Register()
+        public ActionResult Register(int lessonId)
         {
-            return View();
+            var selectedLesson = db.Lessons.FirstOrDefault(p => p.Id == lessonId);
+
+            var model = new RegisterViewModel
+            {
+                Students = new List<StudentViewModel>
+        {
+            new StudentViewModel
+            {
+                SelectedLessonId = lessonId,
+                SelectedLessonTitle = selectedLesson != null ? $"{selectedLesson.Title} ({selectedLesson.DayOfWeek})" : "",
+                LessonPrice = selectedLesson?.Price ?? 0
+            }
+        }
+            };
+
+            ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
+
+            // Pass ALL available lessons to the view so the Modal can display them
+            ViewBag.AllLessons = db.Lessons.Include(l => l.Venue).Where(l => l.AvailablePlaces > 0).ToList();
+
+            //fetch venues from the database and pass them to the view
+            ViewBag.Venues = db.Venues.ToList();
+
+            return View(model);
         }
 
-        //
-        // POST: /Account/Register
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
-            if (ModelState.IsValid)
+            ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
+            ViewBag.AllLessons = db.Lessons.Include(l => l.Venue).Where(l => l.AvailablePlaces > 0).ToList();
+            ViewBag.Venues = db.Venues.ToList();
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // 1. CREATE THE PARENT/ACCOUNT HOLDER ONCE
+            var user = new User
             {
-                var member = new User 
-                { 
-                    FirstName = model.FirstName,
-                    SecondName = model.SecondName,
-                    PhoneNumber = model.PhoneNumber,
-                    DateOfBirth = model.DateOfBirth,
-                    UserName = model.Email, 
-                    Email = model.Email 
-                };
-                //stores the password (hashed)
-                var result = await UserManager.CreateAsync(member, model.Password);
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                SecondName = model.SecondName,
+                PhoneNumber = model.PhoneNumber,
+                DateRegistered = DateTime.Now
+            };
 
-                //if user was created successfully then
-                if (result.Succeeded)
-                {
-                    await SignInManager.SignInAsync(member, isPersistent: false, rememberBrowser: false);
+            var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            var result = await userManager.CreateAsync(user, model.Password);
 
-                    //assign the user to the member role
-                    await UserManager.AddToRoleAsync(member.Id, "Member");
-
-                    //redirects user after logining
-                    return RedirectToAction("Index", "Home");
-                }
-                AddErrors(result);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error);
+                return View(model);
             }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
+            // 2. LOOP THROUGH EACH STUDENT AND CREATE THEIR BOOKINGS
+            foreach (var studentVm in model.Students)
+            {
+                var lesson = db.Lessons.Find(studentVm.SelectedLessonId);
+                if (lesson == null) continue; // Skip if invalid lesson
+
+                // Create Student
+                var student = new Student
+                {
+                    FirstName = studentVm.FirstName,
+                    SecondName = studentVm.LastName,
+                    Gender = studentVm.Gender,
+                    DateOfBirth = studentVm.BirthDate,
+                    MedicalConditions = studentVm.MedicalConditions,
+                    Allergies = studentVm.Allergies,
+                    Medications = studentVm.Medications,
+                    AquaticGoals = studentVm.AquaticGoals,
+                    SwimExperience = studentVm.SwimExperience
+                };
+                db.Students.Add(student);
+                db.SaveChanges(); // Generates student.Id
+
+                // Create Booking
+                var booking = new Booking
+                {
+                    UserId = user.Id,
+                    StudentId = student.Id,
+                    BookingDate = DateTime.Now,
+                    TotalAmount = lesson.Price,
+                    AmountPaid = lesson.Price,
+                    AdminNotes = "Standard Registration",
+                    Status = BookingStatus.Completed
+                };
+                db.Bookings.Add(booking);
+                db.SaveChanges(); // Generates booking.BookingId
+
+                // Attach Lesson to Booking
+                db.LessonsBookings.Add(new LessonBooking
+                {
+                    BookingId = booking.BookingId,
+                    LessonId = studentVm.SelectedLessonId
+                });
+
+                // Add Policies Specific to this student
+                if (studentVm.AcceptedPolicies != null)
+                {
+                    foreach (var policyId in studentVm.AcceptedPolicies)
+                    {
+                        db.PolicyAgreements.Add(new PolicyAgreement
+                        {
+                            BookingId = booking.BookingId,
+                            PolicyId = policyId,
+                            Accepted = true,
+                            AgreementDate = DateTime.Now
+                        });
+                    }
+                }
+
+                // Add Payment record
+                db.Payments.Add(new Payment
+                {
+                    BookingId = booking.BookingId,
+                    Amount = lesson.Price,
+                    PaymentDate = DateTime.Now,
+                    Success = true
+                });
+
+                db.SaveChanges();
+            }
+
+            return RedirectToAction("Success"); // Or whatever your success page expects
         }
 
-        //
+        [AllowAnonymous]
+        public ActionResult Success(int? id)
+        {
+            // If someone tries to access /Account/Success without an ID, kick them to the home page
+            if (id == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Fetch the booking AND all connected tables
+            var booking = db.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Student)
+                .Include(b => b.Payments)
+                .Include(b => b.LessonsBookings.Select(lb => lb.Lesson)) // Pulls the lessons through the bridge table
+                .FirstOrDefault(b => b.BookingId == id);
+
+            if (booking == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(booking);
+        }
+
+        private void SendConfirmationEmail(string userEmail)
+        {
+            try
+            {
+                using (MailMessage mail = new MailMessage())
+                {
+                    mail.From = new MailAddress("yuliiaaav@gmail.com", "Swim School");
+                    mail.To.Add(userEmail);
+                    mail.Subject = "Swimming Lesson Booking Confirmation";
+                    mail.Body = "Thank you for registering and booking your lessons. We look forward to seeing you in the pool!";
+                    mail.IsBodyHtml = false; // Set to true if you want to use HTML tags in your body
+
+                    using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
+                    {
+                        //turn on encryption
+                        smtp.EnableSsl = true;
+                        //not using windows login
+                        smtp.UseDefaultCredentials = false;
+
+                        // Keep credentials secure (Optionally, pull these from Web.config)
+                        string senderEmail = "yuliiaaav@gmail.com";
+                        string appPassword = "limbochki2005";
+
+                        smtp.Credentials = new NetworkCredential(senderEmail, appPassword);
+
+                        // Send the email
+                        smtp.Send(mail);
+                    }
+                }
+            }
+            catch (SmtpException ex)
+            {
+                // If the email fails to send, the app WON'T crash
+                // It will just log the error to your Visual Studio Output window.
+                Debug.WriteLine("Failed to send email: " + ex.Message);
+
+                // The user will still see the "Success" page, they just won't get the email.
+            }
+        }
+
         // GET: /Account/ConfirmEmail
         [AllowAnonymous]
         public async Task<ActionResult> ConfirmEmail(string userId, string code)
@@ -462,33 +630,33 @@ namespace SwimmingSchool_Implementation.Controllers
         }
 
         internal class ChallengeResult : HttpUnauthorizedResult
+    {
+        public ChallengeResult(string provider, string redirectUri)
+            : this(provider, redirectUri, null)
         {
-            public ChallengeResult(string provider, string redirectUri)
-                : this(provider, redirectUri, null)
-            {
-            }
-
-            public ChallengeResult(string provider, string redirectUri, string userId)
-            {
-                LoginProvider = provider;
-                RedirectUri = redirectUri;
-                UserId = userId;
-            }
-
-            public string LoginProvider { get; set; }
-            public string RedirectUri { get; set; }
-            public string UserId { get; set; }
-
-            public override void ExecuteResult(ControllerContext context)
-            {
-                var properties = new AuthenticationProperties { RedirectUri = RedirectUri };
-                if (UserId != null)
-                {
-                    properties.Dictionary[XsrfKey] = UserId;
-                }
-                context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
-            }
         }
-        #endregion
+
+        public ChallengeResult(string provider, string redirectUri, string userId)
+        {
+            LoginProvider = provider;
+            RedirectUri = redirectUri;
+            UserId = userId;
+        }
+
+        public string LoginProvider { get; set; }
+        public string RedirectUri { get; set; }
+        public string UserId { get; set; }
+
+        public override void ExecuteResult(ControllerContext context)
+        {
+            var properties = new AuthenticationProperties { RedirectUri = RedirectUri };
+            if (UserId != null)
+            {
+                properties.Dictionary[XsrfKey] = UserId;
+            }
+            context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
+        }
     }
+    #endregion
+    }   
 }
