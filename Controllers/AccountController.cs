@@ -202,6 +202,26 @@ namespace SwimmingSchool_Implementation.Controllers
                 DateRegistered = DateTime.Now
             };
 
+            // Group the students by the lesson they selected to see how many total spots this family needs per class
+            var requestedSpotsPerLesson = model.Students
+                .GroupBy(s => s.SelectedLessonId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            foreach (var request in requestedSpotsPerLesson)
+            {
+                var lessonId = request.Key;
+                var spotsNeeded = request.Value;
+
+                var dbLesson = db.Lessons.Find(lessonId);
+
+                // If the lesson doesn't exist, or they are trying to book 2 kids into a class with 1 spot left
+                if (dbLesson == null || dbLesson.AvailablePlaces < spotsNeeded)
+                {
+                    ModelState.AddModelError("", $"We're sorry! Another customer just booked spots in '{dbLesson?.Title}'. There are only {dbLesson?.AvailablePlaces} openings left.");
+                    return View(model); // Kick them back to the form with the error message
+                }
+            }
+
             var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
             var result = await userManager.CreateAsync(user, model.Password);
 
@@ -254,6 +274,10 @@ namespace SwimmingSchool_Implementation.Controllers
                     BookingId = booking.BookingId,
                     LessonId = studentVm.SelectedLessonId
                 });
+
+                // THE DEDUCTION (Secure the spot!)
+                lesson.AvailablePlaces -= 1;
+                db.Entry(lesson).State = System.Data.Entity.EntityState.Modified;
 
                 // Add Policies Specific to this student
                 if (studentVm.AcceptedPolicies != null)
