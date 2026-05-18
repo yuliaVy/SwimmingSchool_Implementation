@@ -1,33 +1,288 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
+    ViewData["Title"] = "Home Page";
 }
 
-<main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* Aqua Life Custom Styles
+       Colors:
+       Navy (Text/Headings): #1A365D
+       Aqua (Accents/Backgrounds): #E0F7FA to #00A8E8
+       Coral (Action Buttons): #FF6F59
+    */
+
+    .aqualife-wrapper {
+        font-family: 'Poppins', sans-serif;
+        color: #1A365D;
+        line-height: 1.6;
+        margin: -20px; /* Counteracts default ASP.NET container padding for full bleed */
+    }
+
+        .aqualife-wrapper h1, .aqualife-wrapper h2, .aqualife-wrapper h3 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+    .btn-coral {
+        display: inline-block;
+        background-color: #FF6F59;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+        .btn-coral:hover {
+            background-color: #E55A44;
+            transform: translateY(-2px);
+            color: white;
+        }
+    .al-header {
+        text-align: center;
+        border-bottom: 1px solid #E0F7FA; /* Simple subtle line separating header */
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02); /* Very subtle shadow */
+    }
+
+    /* Hero Section */
+    .al-hero {
+        background: linear-gradient(135deg, #00A8E8 0%, #1A365D 100%);
+        color: white;
+        border-radius: 20px;
+        text-align: center;
+        padding: 100px 20px;
+    }
+
+        .al-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .al-hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            font-weight: 300;
+        }
+
+    /* About Section */
+    .al-about {
+        padding: 80px 20px;
+        background-color: #ffffff;
+    }
+
+    .al-about-flex {
+        display: flex;
+        align-items: center; /* Vertically centers the logo and text */
+        gap: 50px; /* Creates space between the logo and text */
+        max-width: 1000px; /* Makes the box a bit wider to fit both comfortably */
+        margin: 0 auto;
+    }
+
+    .al-about-logo {
+        flex: 0 0 350px; /* Fixes the logo container width */
+    }
+
+        .al-about-logo img {
+            width: 100%; /* Ensures logo scales nicely within its container */
+            height: auto;
+        }
+
+    .al-about-text {
+        flex: 1; /* Allows text to take up remaining space */
+        text-align: left; /* Forces text to be left-aligned */
+    }
+
+        .al-about-text h2 {
+            color: #00A8E8;
+            font-size: 2.2rem;
+            text-align: left; /* Ensures heading matches paragraph alignment */
+        }
+    /* Grid Layouts for Lessons & Venues */
+    .al-section-bg {
+        background-color: #F4F9F9;
+        padding: 80px 20px;
+    }
+
+    .al-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .al-section-title {
+        text-align: center;
+        font-size: 2.2rem;
+        margin-bottom: 50px;
+        color: #1A365D;
+    }
+
+    .al-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+    }
+
+    /* Cards */
+    .al-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+        border-top: 4px solid #00A8E8;
+    }
+
+        .al-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .al-card h3 {
+            color: #00A8E8;
+            font-size: 1.4rem;
+        }
+
+        .al-card ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+
+            .al-card ul li {
+                margin-bottom: 10px;
+                font-size: 0.95rem;
+            }
+
+                .al-card ul li strong {
+                    color: #1A365D;
+                }
+
+    /* Final CTA Section */
+    .al-cta {
+        text-align: center;
+        padding: 80px 20px;
+        border-radius: 20px;
+        background-color: #1A365D;
+        color: white;
+    }
+
+        .al-cta h2 {
+            font-size: 2.5rem;
+        }
+
+        .al-cta p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: #E0F7FA;
+        }
+
+    /* Mobile Adjustments */
+    @@media (max-width: 768px) {
+        .al-hero h1 {
+            font-size: 2.2rem;
+        }
+
+        .al-section-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+<div>
+    <section class="al-hero">
+        <h1>Dive Into Confidence with Aqua Life</h1>
+        <p>Glasgow’s premier swimming school offering expert coaching for all ages and abilities. From toddlers to adults, we help you master the water.</p>
+        <a href="@Url.Action("Index", "Booking")" class="btn-coral">Book Your Lesson</a>
     </section>
 
-    <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-                enables a clean separation of concerns and gives you full control over markup
-                for enjoyable, agile development.
-            </p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-        </section>
-    </div>
-</main>
+    <section class="al-about">
+        <div class="al-about-flex">
+            <div class="al-about-logo">
+                <img src="@Url.Content("~/Content/Images/logo.png")" alt="The Aqua Life Swimming School Logo" />
+            </div>
+
+            <div class="al-about-text">
+                <h2>Welcome to Aqua Life</h2>
+                <p>Based right here in Glasgow, Aqua Life is dedicated to making swimming a safe, enjoyable, and rewarding experience. We believe that swimming is an essential life skill, which is why our passionate instructors focus on technique, confidence, and fun. Whether you're taking your very first dip or refining your strokes, our small class sizes ensure you get the personalized attention you deserve.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="al-section-bg">
+        <div class="al-container">
+            <h2 class="al-section-title">Our Lessons</h2>
+            <div class="al-grid">
+
+                <div class="al-card">
+                    <h3>Private (1:1)</h3>
+                    <p>Maximum focus, rapid progress. Tailored to the swimmer's individual needs, perfect for nervous beginners or those fast-tracking their technique.</p>
+                </div>
+
+                <div class="al-card">
+                    <h3>Semi-Private (2:1)</h3>
+                    <p>Learn alongside a friend or sibling! The perfect balance of personalized instructor feedback and shared fun.</p>
+                </div>
+
+                <div class="al-card">
+                    <h3>Small Group (Max 6:1)</h3>
+                    <p>Fun, social, and highly effective. Capped at six swimmers to ensure every student gets plenty of pool time and guidance.</p>
+                </div>
+
+                <div class="al-card">
+                    <h3>Adult Lessons</h3>
+                    <p>It's never too late! Judgment-free, supportive classes for all levels—from overcoming water phobia to perfecting stroke efficiency.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section style="background-color: #ffffff; padding: 80px 20px;">
+        <div class="al-container">
+            <h2 class="al-section-title">Our Glasgow Venues</h2>
+            <div class="al-grid">
+
+                <div class="al-card">
+                    <h3>📍 The West End Baths</h3>
+                    <p><strong>Hillhead</strong></p>
+                    <ul>
+                        <li><strong>The Pool:</strong> A restored 25m pool kept at a comfortable 29°C. Ideal for adults and advanced junior groups.</li>
+                        <li><strong>Parking:</strong> On-street, pay-and-display immediately outside.</li>
+                        <li><strong>Transport:</strong> 5-min walk from Hillhead Subway; serviced by Great Western Road buses.</li>
+                    </ul>
+                </div>
+
+                <div class="al-card">
+                    <h3>📍 Southside Community Hub</h3>
+                    <p><strong>Shawlands</strong></p>
+                    <ul>
+                        <li><strong>The Pool:</strong> A bright 15m teaching pool kept at a toasty 31°C. Perfect for beginners and younger swimmers.</li>
+                        <li><strong>Parking:</strong> Free dedicated car park at the rear.</li>
+                        <li><strong>Transport:</strong> Bus routes 3, 38, 57 outside; 10-min walk from Crossmyloof station.</li>
+                    </ul>
+                </div>
+
+                <div class="al-card">
+                    <h3>📍 East End Sports Village</h3>
+                    <p><strong>Dalmarnock</strong></p>
+                    <ul>
+                        <li><strong>The Pool:</strong> Olympic-standard facilities with a variable-depth training pool and on-site café.</li>
+                        <li><strong>Parking:</strong> Large, free on-site car park with ample spaces.</li>
+                        <li><strong>Transport:</strong> 3-minute walk from Dalmarnock train station.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="al-cta">
+        <h2>Ready to make a splash?</h2>
+        <p>View our live timetable and secure your spot today.</p>
+        <a href="@Url.Action("Booking", "Home")" class="btn-coral">View Timetable & Book</a>
+    </section>
+
+</div>

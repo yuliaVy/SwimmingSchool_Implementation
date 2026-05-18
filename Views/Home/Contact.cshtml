@@ -1,19 +1,211 @@
-﻿@{
-    ViewBag.Title = "Contact";
+﻿@model SwimmingSchool_Implementation.Models.ContactViewModel
+
+@{
+    ViewBag.Title = "Contact Us";
 }
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-    <h3>@ViewBag.Message</h3>
 
-    <address>
-        One Microsoft Way<br />
-        Redmond, WA 98052-6399<br />
-        <abbr title="Phone">P:</abbr>
-        425.555.0100
-    </address>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <address>
-        <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@example.com</a><br />
-        <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
-    </address>
-</main>
+<style>
+
+    .contact-wrapper {
+        font-family: 'Poppins', sans-serif;
+        padding: 60px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        color: #1A365D;
+    }
+
+    .contact-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 50px;
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr 1fr;
+        gap: 40px;
+        background: rgba(255,255,255,0.92);
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .contact-form {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+    }
+
+    .form-control {
+        width: 100%;
+        max-width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .btn-submit {
+        width: 100%;
+        border: none;
+        padding: 14px;
+        border-radius: 6px;
+        background: #00A8E8;
+        color: white;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+        .btn-submit:hover {
+            background: #0077B6;
+        }
+
+    .text-danger {
+        color: red;
+        font-size: 0.9rem;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .contact-map iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 400px;
+        border: none;
+        border-radius: 10px;
+    }
+
+    @@media(max-width: 992px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="contact-wrapper">
+
+    <h1 class="contact-title">Contact Us</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="contact-grid">
+
+        <!-- CONTACT INFO -->
+        <div>
+
+            <h4>Email</h4>
+            <p>hello@aqualife.com</p>
+
+            <h4>Phone</h4>
+            <p>+44 141 555 1234</p>
+
+            <h4>Address</h4>
+            <p>
+                1 Water Way<br />
+                Glasgow<br />
+                Scotland
+            </p>
+
+        </div>
+
+        <!-- CONTACT FORM -->
+        <div class="contact-form">
+
+            <h3 class="text-center mb-4">
+                Send us a Message
+            </h3>
+
+            @using (Html.BeginForm("Contact", "Home", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="row">
+
+                    <div class="col-md-6">
+                        @Html.TextBoxFor(m => m.FirstName,
+                            new
+                            {
+                                @class = "form-control",
+                                placeholder = "First Name *"
+                            })
+
+                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="col-md-6">
+                        @Html.TextBoxFor(m => m.SecondName,
+                            new
+                            {
+                                @class = "form-control",
+                                placeholder = "Second Name *"
+                            })
+
+                        @Html.ValidationMessageFor(m => m.SecondName, "", new { @class = "text-danger" })
+                    </div>
+
+                </div>
+
+                @Html.TextBoxFor(m => m.Email,
+                    new
+                    {
+                        @class = "form-control",
+                        placeholder = "Email Address *"
+                    })
+
+                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+
+                @Html.TextBoxFor(m => m.Phone,
+                    new
+                    {
+                        @class = "form-control",
+                        placeholder = "Phone Number"
+                    })
+
+                @Html.TextAreaFor(m => m.Message,
+                    new
+                    {
+                        @class = "form-control",
+                        rows = 6,
+                        placeholder = "Write your message here..."
+                    })
+
+                @Html.ValidationMessageFor(m => m.Message, "", new { @class = "text-danger" })
+
+                <button type="submit" class="btn-submit">
+                    Submit Enquiry
+                </button>
+            }
+
+        </div>
+
+        <!-- GOOGLE MAP -->
+        <div class="contact-map">
+
+            <iframe src="https://www.google.com/maps/d/u/0/embed?mid=1OdjwCRfdbqsVLNbebNIogF6mTHxMSoY&ehbc=2E312F&noprof=1" width="640" height="480"></iframe>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+}
