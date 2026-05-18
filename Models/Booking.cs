@@ -34,12 +34,10 @@ namespace SwimmingSchool_Implementation.Models
 
         [Required]
         [DataType(DataType.Currency)]
-        [Column(TypeName = "decimal(18, 2)")]
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; } 
 
         [DataType(DataType.Currency)]
-        [Column(TypeName = "decimal(18, 2)")]
         [Display(Name = "Amount Paid")]
         public decimal AmountPaid { get; set; } // If user paid deposit only
 
@@ -47,21 +45,28 @@ namespace SwimmingSchool_Implementation.Models
         public string AdminNotes { get; set; }
 
         // --- Foreign Key & Navigation properties ---
-        [ForeignKey("LearnerId")]
+        [ForeignKey("User")]
         [Required]
-        [Display(Name = "Learner")]
-        public string LearnerId { get; set; } 
-        public User Learner { get; set; }
+        public string UserId { get; set; }
+        public virtual User User { get; set; }
 
-
-
-        // --- The Lessons List (Many-to-Many Relationship) ---
-
-        public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
+        [ForeignKey("Student")]
+        public int StudentId { get; set; }
+        public virtual Student Student { get; set; }
 
 
 
 
-        
+        // --- The LessonsBooking table ---
+        public ICollection<LessonBooking> LessonsBookings { get; set; }
+
+        //one-to-many connection with policy agreement table
+        public virtual ICollection<PolicyAgreement> PolicyAgreements { get; set; }
+
+        //one-to-many connection with payment table
+        public virtual ICollection<Payment> Payments { get; set; }
+
+
+
     }
 }

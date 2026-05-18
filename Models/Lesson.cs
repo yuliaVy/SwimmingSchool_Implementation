@@ -2,29 +2,33 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
-using System.Data.Entity;
+using System.Web.UI.WebControls;
 
 namespace SwimmingSchool_Implementation.Models
 {
+    public enum LessonType
+    {
+        Kids = 1,
+        Adult = 2
+    }
     public class Lesson
     {
         // --- Core Lesson Properties ---
 
         [Key]
-        public int LessonId { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(100)]
         [Display(Name = "Lesson Name / Level")]
         public string Title { get; set; } // can be "Beginner Freestyle" or "Toddler Splash"
 
-        [Required(ErrorMessage = "A date is required.")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-        [Display(Name = "Lesson Date")]
-        public DateTime LessonDate { get; set; } 
+        [Required(ErrorMessage = "A day of the week  is required.")]
+        [Display(Name = "Lesson Day")]
+        public DayOfWeek DayOfWeek { get; set; } 
 
         [Required(ErrorMessage = "A start time is required.")]
         [DataType(DataType.Time)]
@@ -43,18 +47,30 @@ namespace SwimmingSchool_Implementation.Models
 
         [Required(ErrorMessage = "Price is required.")]
         [DataType(DataType.Currency)]
-        [Column(TypeName = "decimal(18, 2)")] 
         public decimal Price { get; set; }
 
+        public int AvailablePlaces { get; set; }
+
+        public string AgeGroup { get; set; }
+        public LessonType LessonType { get; set; }
+
+
         // --- Foreign Key & Navigation properties ---
-        [ForeignKey("TeacherId")]
+        [ForeignKey("Teacher")]
         [Required(ErrorMessage = "Please assign a teacher.")]
         [Display(Name = "Instructor")]
-        public string TeacherId { get; set; }
+        public string UserId { get; set; }
         public User Teacher { get; set; }
+
+        [ForeignKey("Venue")]
+        public int VenueId { get; set; }
+
+        public virtual Venue Venue { get; set; }
 
 
         // Navigation property to track who has booked this specific lesson
-        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public virtual ICollection<LessonBooking> LessonsBookings { get; set; }
+
+
     }
 }

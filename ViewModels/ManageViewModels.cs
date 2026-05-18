@@ -83,4 +83,23 @@ namespace SwimmingSchool_Implementation.Models
         public string SelectedProvider { get; set; }
         public ICollection<System.Web.Mvc.SelectListItem> Providers { get; set; }
     }
+
+    public class ContactViewModel
+    {
+        [Required(ErrorMessage = "Please enter your first name.")]
+        public string FirstName { get; set; }
+
+        [Required(ErrorMessage = "Please enter your second name.")]
+        public string SecondName { get; set; }
+
+        [Required(ErrorMessage = "Please enter your email address.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email.")]
+        public string Email { get; set; }
+
+        public string Phone { get; set; } // Optional
+
+        [Required(ErrorMessage = "Please enter your message.")]
+        public string Message { get; set; }
+    }
+
 }

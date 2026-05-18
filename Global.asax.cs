@@ -1,3 +1,4 @@
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace SwimmingSchool_Implementation
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+            StripeConfiguration.ApiKey = System.Configuration.ConfigurationManager.AppSettings["StripeSecretKey"];
         }
     }
 }
