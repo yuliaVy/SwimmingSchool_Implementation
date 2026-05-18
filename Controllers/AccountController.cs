@@ -2,10 +2,13 @@
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Stripe;
+using Stripe.Checkout;
 using SwimmingSchool_Implementation.Models;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -15,7 +18,6 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using System.Data.Entity;
 
 namespace SwimmingSchool_Implementation.Controllers
 {
@@ -182,8 +184,9 @@ namespace SwimmingSchool_Implementation.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Register(RegisterViewModel model)
+        public ActionResult Register(RegisterViewModel model)
         {
+            // Re-populate view drop-downs if validation fails
             ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
             ViewBag.AllLessons = db.Lessons.Include(l => l.Venue).Where(l => l.AvailablePlaces > 0).ToList();
             ViewBag.Venues = db.Venues.ToList();
@@ -191,7 +194,174 @@ namespace SwimmingSchool_Implementation.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // 1. CREATE THE PARENT/ACCOUNT HOLDER ONCE
+            // PRE-CHECK: Ensure spots are still open before sending them to pay
+            var requestedSpots = model.Students.GroupBy(s => s.SelectedLessonId).ToDictionary(g => g.Key, g => g.Count());
+            foreach (var request in requestedSpots)
+            {
+                var lesson = db.Lessons.Find(request.Key);
+                if (lesson == null || lesson.AvailablePlaces < request.Value)
+                {
+                    ModelState.AddModelError("", $"Sorry, '{lesson?.Title}' just filled up. Please select a different class.");
+                    return View(model);
+                }
+            }
+
+            // Calculate the Grand Total for all students
+            decimal grandTotal = 0;
+            foreach (var studentVm in model.Students)
+            {
+                var lesson = db.Lessons.Find(studentVm.SelectedLessonId);
+                if (lesson != null) grandTotal += lesson.Price;
+            }
+            // Calculate what they actually owe TODAY based on the Deposit checkbox
+            decimal amountToPayToday = model.PayDepositOnly ? (grandTotal * 0.20m) : grandTotal;
+
+            // We are putting the whole 'model' in a safe box called "PendingRegistration"
+            Session["PendingRegistration"] = model;
+
+            // Redirect based on chosen button path
+            if (model.PaymentMethod == "Stripe")
+            {
+                return RedirectToStripeCheckout(amountToPayToday, model);
+            }
+            else if (model.PaymentMethod == "PayPal")
+            {
+                return RedirectToPayPalCheckout(amountToPayToday);
+            }
+
+            ModelState.AddModelError("", "Invalid payment method selected.");
+            return View(model);
+
+            
+        }
+
+        // =================================================================
+        // Stripe Checkout Logic - This is where we create the Stripe Session and redirect the user to the Stripe-hosted payment page
+        // =================================================================
+        private ActionResult RedirectToStripeCheckout(decimal amount, RegisterViewModel model)
+        {
+            var domain = Request.Url.GetLeftPart(UriPartial.Authority);
+
+            var options = new SessionCreateOptions
+            {
+                PaymentMethodTypes = new List<string> { "card" },
+                LineItems = new List<SessionLineItemOptions>
+                    {
+                        new SessionLineItemOptions
+                        {
+                            PriceData = new SessionLineItemPriceDataOptions
+                            {
+                                // Stripe expects amounts in pence/cents (e.g., £10.00 = 1000)
+                                UnitAmount = (long)(amount * 100),
+                                Currency = "gbp",
+                                ProductData = new SessionLineItemPriceDataProductDataOptions
+                                {
+                                    Name = model.PayDepositOnly ? "Aqua Life - 20% Deposit" : "Aqua Life - Full Payment",
+                                    Description = $"Booking for {model.Students.Count} swimmer(s)."
+                                },
+                            },
+                            Quantity = 1,
+                        },
+                    },
+                Mode = "payment",
+                // Pass the generated booking ID so the Success page knows which booking to mark as Paid!
+                SuccessUrl = domain + "/Account/Success?session_id={CHECKOUT_SESSION_ID}&bookingId=" + 123, // Replace 123 with your actual parent booking/order ID
+                CancelUrl = domain + "/Account/Cancel",
+            };
+
+            var service = new SessionService();
+            Session session = service.Create(options);
+
+            // Redirect the user to Stripe's secure hosted checkout page
+            Response.Headers.Add("Location", session.Url);
+            return new HttpStatusCodeResult(303);
+
+        }
+
+        private ActionResult RedirectToPayPalCheckout(decimal amount)
+        {
+            // Future PayPal logic wrapper goes directly inside here
+            throw new NotImplementedException("PayPal API routing pending configuration.");
+        }
+
+        [AllowAnonymous]
+        // Add token and PayerID as optional parameters to catch PayPal's redirect data
+        public async Task<ActionResult> Success(string session_id = null, string token = null, string PayerID = null)
+        {
+            // 1. GET THE DATA BACK OUT OF THE SAFE BOX FIRST
+            // We must do this first so we know WHICH payment method they selected!
+            var model = Session["PendingRegistration"] as RegisterViewModel;
+
+            if (model == null)
+            {
+                // Safety net: Session expired or they refreshed the page
+                return RedirectToAction("Index", "Home");
+            }
+
+            // 2. VERIFY THE PAYMENT BASED ON THE CHOSEN GATEWAY
+            bool isPaymentValid = false;
+            decimal totalCollected = 0;
+
+            try
+            {
+                if (model.PaymentMethod == "Stripe")
+                {
+                    // STRIPE VERIFICATION
+                    if (string.IsNullOrEmpty(session_id)) return RedirectToAction("PaymentFailed");
+
+                    var service = new SessionService();
+                    Stripe.Checkout.Session stripeSession = service.Get(session_id);
+
+                    if (stripeSession != null && stripeSession.PaymentStatus == "paid")
+                    {
+                        isPaymentValid = true;
+                        totalCollected = (decimal)(stripeSession.AmountTotal / 100.00);
+                    }
+                }
+                else if (model.PaymentMethod == "PayPal")
+                {
+                    // PAYPAL VERIFICATION
+                    if (string.IsNullOrEmpty(token)) return RedirectToAction("PaymentFailed");
+
+                    // TODO: Insert your PayPal API verification call here.
+                    // Depending on your PayPal SDK, you will usually pass the 'token' to PayPal 
+                    // to capture the funds and check the status.
+
+                    // PSEUDO-CODE EXAMPLE:
+                    // var request = new OrdersCaptureRequest(token);
+                    // var response = await PayPalClient.Execute(request);
+                    // var result = response.Result<Order>();
+                    // if (result.Status == "COMPLETED") { ... }
+
+                    bool paypalConfirmed = true; // REPLACE THIS with actual PayPal SDK result
+
+                    if (paypalConfirmed)
+                    {
+                        isPaymentValid = true;
+
+                        // totalCollected = ... (Extract the total from your PayPal response object)
+
+                        // For now, as a placeholder, we'll calculate what it *should* be
+                        decimal subtotal = model.Students.Sum(s => db.Lessons.Find(s.SelectedLessonId)?.Price ?? 0);
+                        totalCollected = model.PayDepositOnly ? (subtotal * 0.20m) : subtotal;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the API error securely
+                System.Diagnostics.Debug.WriteLine($"Payment Gateway Error: {ex.Message}");
+                return RedirectToAction("PaymentFailed");
+            }
+
+            // 3. IF PAYMENT IS INVALID, KICK THEM OUT
+            if (!isPaymentValid)
+            {
+                return RedirectToAction("PaymentFailed");
+            }
+
+            // =========================================================
+            // SAFE TO WRITE TO THE DATABASE
             var user = new User
             {
                 UserName = model.Email,
@@ -263,7 +433,7 @@ namespace SwimmingSchool_Implementation.Controllers
                     TotalAmount = lesson.Price,
                     AmountPaid = lesson.Price,
                     AdminNotes = "Standard Registration",
-                    Status = BookingStatus.Completed
+                    Status = BookingStatus.Pending
                 };
                 db.Bookings.Add(booking);
                 db.SaveChanges(); // Generates booking.BookingId
@@ -306,73 +476,46 @@ namespace SwimmingSchool_Implementation.Controllers
                 db.SaveChanges();
             }
 
-            return RedirectToAction("Success"); // Or whatever your success page expects
+            SendConfirmationEmail(model.Email, model.FirstName);
+
+            return RedirectToAction("SuccessScreen"); // Or whatever your success page expects
         }
 
-        [AllowAnonymous]
-        public ActionResult Success(int? id)
+
+        private void SendConfirmationEmail(string customerEmail, string customerName)
         {
-            // If someone tries to access /Account/Success without an ID, kick them to the home page
-            if (id == null)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            // Fetch the booking AND all connected tables
-            var booking = db.Bookings
-                .Include(b => b.User)
-                .Include(b => b.Student)
-                .Include(b => b.Payments)
-                .Include(b => b.LessonsBookings.Select(lb => lb.Lesson)) // Pulls the lessons through the bridge table
-                .FirstOrDefault(b => b.BookingId == id);
-
-            if (booking == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(booking);
-        }
-
-        private void SendConfirmationEmail(string userEmail)
-        {
+           
             try
             {
-                using (MailMessage mail = new MailMessage())
+                string senderEmail = ConfigurationManager.AppSettings["SenderEmail"];
+                string senderPassword = ConfigurationManager.AppSettings["SenderPassword"];
+                var mailMessage = new MailMessage();
+                mailMessage.From = new MailAddress(senderEmail, "AquaLife Swimming School");
+                mailMessage.To.Add(customerEmail);
+                mailMessage.Subject = "Aqua Life - Booking Confirmation";
+                mailMessage.Body = $"Hi {customerName},\n\n" +
+                                    $"Thank you for registering with Aqua Life! We have successfully received your payment.\n\n" +
+                                    $"We look forward to seeing you in the pool!\n\n" +
+                                    $"- The Aqua Life Team";
+
+                using (SmtpClient smtp = new SmtpClient())
                 {
-                    mail.From = new MailAddress("yuliiaaav@gmail.com", "Swim School");
-                    mail.To.Add(userEmail);
-                    mail.Subject = "Swimming Lesson Booking Confirmation";
-                    mail.Body = "Thank you for registering and booking your lessons. We look forward to seeing you in the pool!";
-                    mail.IsBodyHtml = false; // Set to true if you want to use HTML tags in your body
-
-                    using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
-                    {
-                        //turn on encryption
-                        smtp.EnableSsl = true;
-                        //not using windows login
-                        smtp.UseDefaultCredentials = false;
-
-                        // Keep credentials secure (Optionally, pull these from Web.config)
-                        string senderEmail = "yuliiaaav@gmail.com";
-                        string appPassword = "limbochki2005";
-
-                        smtp.Credentials = new NetworkCredential(senderEmail, appPassword);
-
-                        // Send the email
-                        smtp.Send(mail);
-                    }
+                    smtp.Host = "smtp.gmail.com";
+                    smtp.Port = 587;
+                    smtp.EnableSsl = true;
+                    smtp.UseDefaultCredentials = false;
+                    smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    smtp.Send(mailMessage);
                 }
             }
-            catch (SmtpException ex)
+            catch (Exception ex)
             {
-                // If the email fails to send, the app WON'T crash
-                // It will just log the error to your Visual Studio Output window.
-                Debug.WriteLine("Failed to send email: " + ex.Message);
-
-                // The user will still see the "Success" page, they just won't get the email.
+                // Log the error, but don't crash the application if an email fails to send!
+                System.Diagnostics.Debug.WriteLine($"Email failed to send: {ex.Message}");
             }
         }
+
 
         // GET: /Account/ConfirmEmail
         [AllowAnonymous]
