@@ -104,6 +104,10 @@ namespace SwimmingSchool_Implementation.Models
 
         public int SelectedLessonId{ get; set; }
 
+        // True if they check the 20% deposit box, False if they want to pay in full
+        public bool PayDepositOnly { get; set; }
+
+        // Will hold either "Stripe" or "PayPal" based on which button they click
         public string PaymentMethod { get; set; }
 
         public List<int> AcceptedPolicies { get; set; }
