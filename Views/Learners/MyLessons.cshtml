@@ -1,0 +1,219 @@
+﻿@model SwimmingSchool_Implementation.Models.MyLessonsViewModel
+
+@{
+    ViewBag.Title = "My Lessons";
+}
+
+<div class="container py-5">
+    <h2 class="mb-4 text-primary fw-bold">My Swimming Lessons</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+<div class="row g-3 mb-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card bg-primary text-white border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-calendar-check" viewBox="0 0 16 16">
+                        <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                    </svg>
+                </div>
+                <div>
+                    <h6 class="card-title text-uppercase mb-0 text-white-50 fw-bold" style="font-size: 0.8rem;">Total Classes Booked</h6>
+                    <h2 class="mb-0 fw-bold">@Model.TotalClassesBooked</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card bg-danger text-white border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-calendar-x" viewBox="0 0 16 16">
+                        <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708z" />
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                    </svg>
+                </div>
+                <div>
+                    <h6 class="card-title text-uppercase mb-0 text-white-50 fw-bold" style="font-size: 0.8rem;">Cancelled By You</h6>
+                    <h2 class="mb-0 fw-bold">@Model.TotalClassesCancelledByUser</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <ul class="nav nav-tabs mb-4" id="lessonTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab">
+                    Upcoming Lessons <span class="badge bg-primary ms-1">@Model.UpcomingLessons.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab">
+                    Past Lessons
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="lessonTabsContent">
+
+            <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+                @if (!Model.UpcomingLessons.Any())
+                {
+                    <div class="text-center p-5 bg-light rounded border">
+                        <h5 class="text-muted mb-3">You have no upcoming lessons.</h5>
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Book a Class</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @foreach (var lesson in Model.UpcomingLessons)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 shadow-sm border-0 @(lesson.Status == SwimmingSchool_Implementation.Models.SessionStatus.CancelledByUser ? "opacity-50" : "")">
+                                    <div class="card-header @(lesson.Status == SwimmingSchool_Implementation.Models.SessionStatus.Scheduled ? "bg-primary text-white" : "bg-secondary text-white") py-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="m-0 fw-bold">@lesson.SessionDate.ToString("ddd, dd MMM yyyy")</h6>
+                                        <span class="badge bg-light text-dark">@lesson.LessonTime</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold text-dark">@lesson.ClassName</h5>
+                                        <p class="mb-1"><strong>Swimmer:</strong> @lesson.StudentName</p>
+                                        <p class="mb-1"><strong>Instructor:</strong> @lesson.TeacherName</p>
+                                        <p class="mb-3"><strong>Venue:</strong> @lesson.VenueName</p>
+
+                                        @if (lesson.Status == SwimmingSchool_Implementation.Models.SessionStatus.Scheduled)
+                                        {
+                                            <button type="button" class="btn btn-outline-danger w-100 fw-bold mt-auto"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#cancelModal"
+                                                    data-sessionid="@lesson.SessionId"
+                                                    data-student="@lesson.StudentName"
+                                                    data-date="@lesson.SessionDate.ToString("dd MMM yyyy")"
+                                                    data-islate="@lesson.IsLateCancellation.ToString().ToLower()">
+                                                Cancel Lesson
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center mt-auto p-2 bg-light rounded text-danger fw-bold">
+                                                @lesson.Status.ToString()
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="tab-pane fade" id="past" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Swimmer</th>
+                                <th>Class</th>
+                                <th>Instructor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lesson in Model.PastLessons)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@lesson.SessionDate.ToString("dd MMM yyyy") <br /><small class="text-muted">@lesson.LessonTime</small></td>
+                                    <td>@lesson.StudentName</td>
+                                    <td>@lesson.ClassName<br /><small class="text-muted">@lesson.VenueName</small></td>
+                                    <td>@lesson.TeacherName</td>
+                                    <td>
+                                        @if (lesson.Status == SwimmingSchool_Implementation.Models.SessionStatus.Attended || lesson.Status == SwimmingSchool_Implementation.Models.SessionStatus.Scheduled)
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">@lesson.Status.ToString()</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+
+                @using (Html.BeginForm("CancelSession", "Learners", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="sessionId" id="modalSessionId" value="" />
+
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold">Cancel Lesson</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4 text-center">
+                        <h5 class="mb-3">Are you sure you want to cancel?</h5>
+                        <p class="mb-1"><strong>Swimmer:</strong> <span id="modalStudentName"></span></p>
+                        <p class="mb-4"><strong>Date:</strong> <span id="modalLessonDate"></span></p>
+
+                        <div id="lateWarningBox" class="alert alert-warning text-start d-none mb-0">
+                            <strong><i class="bi bi-exclamation-triangle-fill"></i> Late Cancellation Warning</strong><br />
+                            This lesson is less than 48 hours away. In accordance with our policy, this cancellation is non-refundable and cannot be rescheduled.
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Lesson</button>
+                        <button type="submit" class="btn btn-danger fw-bold">Confirm Cancellation</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            var cancelModal = document.getElementById('cancelModal')
+            cancelModal.addEventListener('show.bs.modal', function (event) {
+                // Get the button that triggered the modal
+                var button = event.relatedTarget
+
+                // Extract info from data-* attributes
+                var sessionId = button.getAttribute('data-sessionid')
+                var studentName = button.getAttribute('data-student')
+                var lessonDate = button.getAttribute('data-date')
+                var isLate = button.getAttribute('data-islate') === 'true'
+
+                // Update the modal's hidden input and text fields
+                document.getElementById('modalSessionId').value = sessionId
+                document.getElementById('modalStudentName').textContent = studentName
+                document.getElementById('modalLessonDate').textContent = lessonDate
+
+                // Show or hide the 48-hour warning box
+                var warningBox = document.getElementById('lateWarningBox');
+                if (isLate) {
+                    warningBox.classList.remove('d-none');
+                } else {
+                    warningBox.classList.add('d-none');
+                }
+            })
+        </script>
+    }

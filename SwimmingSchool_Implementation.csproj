@@ -214,6 +214,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BookingController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\LearnersController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -319,6 +320,7 @@
     <Content Include="Views\Booking\Index.cshtml" />
     <Content Include="Views\Account\Success.cshtml" />
     <Content Include="Views\Home\Team.cshtml" />
+    <Content Include="Views\Learners\MyLessons.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

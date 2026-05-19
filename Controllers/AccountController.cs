@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNet.Identity;
+﻿using Microsoft.Ajax.Utilities;
+using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using PayPalCheckoutSdk.Core;
+using PayPalCheckoutSdk.Orders;
 using Stripe;
 using Stripe.Checkout;
 using SwimmingSchool_Implementation.Models;
@@ -19,7 +21,6 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using PayPalCheckoutSdk.Orders;
 
 namespace SwimmingSchool_Implementation.Controllers
 {
@@ -482,6 +483,8 @@ namespace SwimmingSchool_Implementation.Controllers
 
             var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
             var result = await userManager.CreateAsync(user, model.Password);
+            //assign the user to the member role
+            await UserManager.AddToRoleAsync(user.Id, "Learner");
 
             if (!result.Succeeded)
             {
