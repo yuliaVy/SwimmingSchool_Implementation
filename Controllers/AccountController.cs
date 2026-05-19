@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
+using PayPalCheckoutSdk.Core;
 using Stripe;
 using Stripe.Checkout;
 using SwimmingSchool_Implementation.Models;
@@ -18,6 +19,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using PayPalCheckoutSdk.Orders;
 
 namespace SwimmingSchool_Implementation.Controllers
 {
@@ -184,7 +186,7 @@ namespace SwimmingSchool_Implementation.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public ActionResult Register(RegisterViewModel model)
+        public async Task<ActionResult> Register(RegisterViewModel model)
         {
             // Re-populate view drop-downs if validation fails
             ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
@@ -226,7 +228,7 @@ namespace SwimmingSchool_Implementation.Controllers
             }
             else if (model.PaymentMethod == "PayPal")
             {
-                return RedirectToPayPalCheckout(amountToPayToday);
+                return await RedirectToPayPalCheckout(amountToPayToday, model);
             }
 
             ModelState.AddModelError("", "Invalid payment method selected.");
@@ -265,7 +267,7 @@ namespace SwimmingSchool_Implementation.Controllers
                     },
                 Mode = "payment",
                 // Pass the generated booking ID so the Success page knows which booking to mark as Paid!
-                SuccessUrl = domain + "/Account/Success?session_id={CHECKOUT_SESSION_ID}&bookingId=" + 123, // Replace 123 with your actual parent booking/order ID
+                SuccessUrl = domain + "/Account/Success?session_id={CHECKOUT_SESSION_ID}",
                 CancelUrl = domain + "/Account/Cancel",
             };
 
@@ -278,10 +280,81 @@ namespace SwimmingSchool_Implementation.Controllers
 
         }
 
-        private ActionResult RedirectToPayPalCheckout(decimal amount)
+        private async Task<ActionResult> RedirectToPayPalCheckout(decimal amount, RegisterViewModel model)
         {
-            // Future PayPal logic wrapper goes directly inside here
-            throw new NotImplementedException("PayPal API routing pending configuration.");
+            // Pull the keys from your Web.config
+            string clientId = ConfigurationManager.AppSettings["PayPalClientId"];
+            string secret = ConfigurationManager.AppSettings["PayPalSecret"];
+
+            // Use SandboxEnvironment for testing. When you go live, change this to LiveEnvironment()
+            var environment = new SandboxEnvironment(clientId, secret);
+            var client = new PayPalHttpClient(environment);
+
+            var domain = Request.Url.GetLeftPart(UriPartial.Authority);
+
+            // 2. CREATE THE ORDER BLUEPRINT
+            var order = new OrderRequest()
+            {
+                // "CAPTURE" tells PayPal you want to charge the user immediately 
+                CheckoutPaymentIntent = "CAPTURE",
+                PurchaseUnits = new System.Collections.Generic.List<PurchaseUnitRequest>()
+                {
+                    new PurchaseUnitRequest()
+                    {
+                        AmountWithBreakdown = new AmountWithBreakdown()
+                        {
+                            CurrencyCode = "GBP",
+                            // PayPal requires the amount as a string with exactly 2 decimal places
+                            Value = amount.ToString("0.00")
+                        },
+                        Description = model.PayDepositOnly ? "Aqua Life - 20% Deposit" : "Aqua Life - Full Payment"
+                    }
+                },
+                    ApplicationContext = new ApplicationContext()
+                    {
+                        BrandName = "Aqua Life Swim School",
+                        // "PAY_NOW" changes the PayPal button from "Continue" to "Pay Now"
+                        UserAction = "PAY_NOW",
+                        // PayPal will automatically attach "?token=EC-12345..." to this URL when it redirects back!
+                        ReturnUrl = domain + "/Account/Success",
+                        CancelUrl = domain + "/Account/RegisterCancel"
+                    }
+            };
+            // 3. SEND THE REQUEST TO PAYPAL
+            var request = new OrdersCreateRequest();
+            request.Prefer("return=representation");
+            request.RequestBody(order);
+
+            try
+            {
+                // Execute the API call
+                var response = await client.Execute(request);
+                var result = response.Result<Order>();
+
+                // 4. FIND THE REDIRECT LINK
+                // PayPal returns a list of links. We need to find the one labeled "approve", 
+                // which is the hosted checkout page where the user types in their password.
+                var approveLink = result.Links.FirstOrDefault(link => link.Rel == "approve");
+
+                if (approveLink != null)
+                {
+                    // Redirect the user's browser to the PayPal checkout page
+                    return Redirect(approveLink.Href);
+                }
+                else
+                {
+                    // Fallback if PayPal's API behaves unexpectedly
+                    ModelState.AddModelError("", "Unable to generate PayPal checkout link.");
+                    return View("Register", model);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("PayPal Checkout Error: " + ex.Message);
+                ModelState.AddModelError("", "Error communicating with PayPal. Please try again.");
+                return View("Register", model);
+            }
+
         }
 
         [AllowAnonymous]
@@ -320,30 +393,45 @@ namespace SwimmingSchool_Implementation.Controllers
                 }
                 else if (model.PaymentMethod == "PayPal")
                 {
-                    // PAYPAL VERIFICATION
-                    if (string.IsNullOrEmpty(token)) return RedirectToAction("PaymentFailed");
+                    // 1. Set up the PayPal Environment
+                    string clientId = System.Configuration.ConfigurationManager.AppSettings["PayPalClientId"];
+                    string secret = System.Configuration.ConfigurationManager.AppSettings["PayPalSecret"];
 
-                    // TODO: Insert your PayPal API verification call here.
-                    // Depending on your PayPal SDK, you will usually pass the 'token' to PayPal 
-                    // to capture the funds and check the status.
+                    // Change to LiveEnvironment() when you launch your site for real
+                    var environment = new PayPalCheckoutSdk.Core.SandboxEnvironment(clientId, secret);
+                    var client = new PayPalCheckoutSdk.Core.PayPalHttpClient(environment);
 
-                    // PSEUDO-CODE EXAMPLE:
-                    // var request = new OrdersCaptureRequest(token);
-                    // var response = await PayPalClient.Execute(request);
-                    // var result = response.Result<Order>();
-                    // if (result.Status == "COMPLETED") { ... }
+                    // 2. Create the Capture Request using the Token (which is the Order ID)
+                    var request = new PayPalCheckoutSdk.Orders.OrdersCaptureRequest(token);
+                    request.RequestBody(new PayPalCheckoutSdk.Orders.OrderActionRequest());
 
-                    bool paypalConfirmed = true; // REPLACE THIS with actual PayPal SDK result
+                    // 3. Execute the Request to officially capture the funds
+                    var response = await client.Execute(request);
+                    var resultt = response.Result<PayPalCheckoutSdk.Orders.Order>();
 
-                    if (paypalConfirmed)
+                    // 4. Verify the Status
+                    if (resultt.Status == "COMPLETED")
                     {
                         isPaymentValid = true;
 
-                        // totalCollected = ... (Extract the total from your PayPal response object)
+                        // 5. Extract the exact amount PayPal actually charged them
+                        var captureAmountStr = resultt.PurchaseUnits[0].Payments.Captures[0].Amount.Value;
 
-                        // For now, as a placeholder, we'll calculate what it *should* be
-                        decimal subtotal = model.Students.Sum(s => db.Lessons.Find(s.SelectedLessonId)?.Price ?? 0);
-                        totalCollected = model.PayDepositOnly ? (subtotal * 0.20m) : subtotal;
+                        if (decimal.TryParse(captureAmountStr, out decimal parsedAmount))
+                        {
+                            totalCollected = parsedAmount;
+                        }
+                        else
+                        {
+                            // Fallback calculation just in case the string parsing fails
+                            decimal subtotall = model.Students.Sum(s => db.Lessons.Find(s.SelectedLessonId)?.Price ?? 0);
+                            totalCollected = model.PayDepositOnly ? (subtotall * 0.20m) : subtotall;
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"PayPal Capture Failed. Status: {resultt.Status}");
+                        return RedirectToAction("PaymentFailed");
                     }
                 }
             }
@@ -477,8 +565,46 @@ namespace SwimmingSchool_Implementation.Controllers
             }
 
             SendConfirmationEmail(model.Email, model.FirstName);
+            decimal subtotal = model.Students.Sum(s => db.Lessons.Find(s.SelectedLessonId)?.Price ?? 0);
+            decimal balanceRemaining = model.PayDepositOnly ? (subtotal - totalCollected) : 0;
 
-            return RedirectToAction("SuccessScreen"); // Or whatever your success page expects
+            // 5. BUILD THE SUCCESS VIEW MODEL FOR THE RECEIPT SCREEN
+            var successModel = new BookingSuccessViewModel
+            {
+                AccountHolderName = $"{model.FirstName} {model.SecondName}",
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                PaymentMethod = model.PaymentMethod,
+                TotalPaidToday = totalCollected, // From the Stripe/PayPal verification
+                PaymentType = model.PayDepositOnly ? "20% Deposit" : "Paid in Full",
+                TransactionDate = DateTime.Now,
+                OutstandingBalance = balanceRemaining
+            };
+
+            foreach (var student in model.Students)
+            {
+                // Pull the lesson from the DB to get the Venue and Day names
+                var lesson = db.Lessons.Include(l => l.Venue).FirstOrDefault(l => l.Id == student.SelectedLessonId);
+
+                if (lesson != null)
+                {
+                    successModel.Students.Add(new SuccessStudentDetail
+                    {
+                        StudentName = $"{student.FirstName} {student.LastName}",
+                        ClassName = lesson.Title,
+                        DayOfWeek = lesson.DayOfWeek.ToString(),
+                        LessonTime = lesson.StartTime.ToString(@"hh\:mm"),
+                        Venue = lesson.Venue?.Name ?? "TBC",
+                        ClassPrice = lesson.Price
+                    });
+                }
+            }
+
+            // 6. Clear the session memory cache container so they can't refresh and duplicate
+            Session["PendingRegistration"] = null;
+
+            // Pass the specialized model to the view!
+            return View(successModel);
         }
 
 
