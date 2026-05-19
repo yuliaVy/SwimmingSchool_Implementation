@@ -521,7 +521,7 @@ namespace SwimmingSchool_Implementation.Controllers
                     TotalAmount = lesson.Price,
                     AmountPaid = lesson.Price,
                     AdminNotes = "Standard Registration",
-                    Status = BookingStatus.Pending
+                    Status = BookingStatus.Completed
                 };
                 db.Bookings.Add(booking);
                 db.SaveChanges(); // Generates booking.BookingId
@@ -532,6 +532,31 @@ namespace SwimmingSchool_Implementation.Controllers
                     BookingId = booking.BookingId,
                     LessonId = studentVm.SelectedLessonId
                 });
+                db.SaveChanges();
+                // NEW: GENERATE THE 4 CHILD BOOKING SESSIONS (4 Weeks)
+
+                // Find the date of their very first class
+                DateTime firstClassDate = GetNextOccurrenceOfDay(lesson.DayOfWeek.ToString());
+
+                // If you have a specific time (e.g., 14:30), you can combine the date and time here:
+                // firstClassDate = firstClassDate.Add(lesson.StartTime);
+
+                // Loop 4 times to create 4 weeks of sessions
+                for (int i = 0; i < 4; i++)
+                {
+                    var session = new BookingSession
+                    {
+                        BookingId = booking.BookingId,
+                        // Add 7 days for every week (Week 0 = +0 days, Week 1 = +7 days, etc.)
+                        SessionDate = firstClassDate.AddDays(i * 7),
+                        Status = SessionStatus.Scheduled
+                    };
+
+                    db.BookingSessions.Add(session);
+                }
+
+                // Save the 4 generated sessions to the database
+                db.SaveChanges();
 
                 // THE DEDUCTION (Secure the spot!)
                 lesson.AvailablePlaces -= 1;
@@ -588,7 +613,7 @@ namespace SwimmingSchool_Implementation.Controllers
 
                 if (lesson != null)
                 {
-                    successModel.Students.Add(new SuccessStudentDetail
+                    var studentDetail = new SuccessStudentDetail
                     {
                         StudentName = $"{student.FirstName} {student.LastName}",
                         ClassName = lesson.Title,
@@ -596,7 +621,16 @@ namespace SwimmingSchool_Implementation.Controllers
                         LessonTime = lesson.StartTime.ToString(@"hh\:mm"),
                         Venue = lesson.Venue?.Name ?? "TBC",
                         ClassPrice = lesson.Price
-                    });
+
+                    };
+
+                    // Calculate the 4 specific dates for the receipt
+                    DateTime firstDate = GetNextOccurrenceOfDay(lesson.DayOfWeek.ToString());
+                    for (int i = 0; i < 4; i++)
+                    {
+                        studentDetail.SessionDates.Add(firstDate.AddDays(i * 7));
+                    }
+                    successModel.Students.Add(studentDetail);
                 }
             }
 
@@ -640,6 +674,28 @@ namespace SwimmingSchool_Implementation.Controllers
                 // Log the error, but don't crash the application if an email fails to send!
                 System.Diagnostics.Debug.WriteLine($"Email failed to send: {ex.Message}");
             }
+        }
+
+        private DateTime GetNextOccurrenceOfDay(string dayOfWeek)
+        {
+            // Convert the string (e.g., "Tuesday") into a C# DayOfWeek enum
+            if (!Enum.TryParse(dayOfWeek, true, out DayOfWeek targetDay))
+            {
+                targetDay = DayOfWeek.Monday; // Fallback just in case
+            }
+
+            DateTime today = DateTime.Today;
+            // Calculate how many days until the next target day
+            int daysUntil = ((int)targetDay - (int)today.DayOfWeek + 7) % 7;
+
+            // If they book ON a Tuesday for a Tuesday class, let's assume they start next week 
+            // (You can change this to 0 if you want them to start the same day)
+            if (daysUntil == 0)
+            {
+                daysUntil = 7;
+            }
+
+            return today.AddDays(daysUntil);
         }
 
 

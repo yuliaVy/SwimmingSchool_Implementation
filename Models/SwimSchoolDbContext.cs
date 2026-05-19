@@ -18,6 +18,7 @@ namespace SwimmingSchool_Implementation.Models
         public DbSet<PolicyAgreement> PolicyAgreements { get; set; }
         public DbSet<Venue> Venues { get; set; }
         public DbSet<TeacherVenue> TeacherVenues{ get; set; }
+        public DbSet<BookingSession> BookingSessions { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

@@ -59,8 +59,24 @@
                                             <small class="text-muted">@student.Venue</small>
                                         </td>
                                         <td>
-                                            <span class="fw-bold">@student.DayOfWeek</span><br />
-                                            <span class="badge bg-secondary">@student.LessonTime</span>
+                                            <span class="fw-bold">@student.DayOfWeek</span>
+                                            <span class="badge bg-secondary ms-1">@student.LessonTime</span>
+
+                                            <div class="mt-2 bg-light p-2 rounded border border-light">
+                                                <small class="fw-bold text-muted text-uppercase" style="font-size: 0.7rem;">Confirmed Dates:</small>
+                                                <ul class="list-unstyled mb-0 mt-1 small">
+                                                    @for (int i = 0; i < student.SessionDates.Count; i++)
+                                                    {
+                                                        <li class="mb-1 d-flex align-items-center">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-calendar-check text-success me-2" viewBox="0 0 16 16">
+                                                                <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
+                                                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                                                            </svg>
+                                                            <strong>Wk @(i + 1):</strong> &nbsp; @student.SessionDates[i].ToString("dd MMM yyyy")
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
                                         </td>
                                         <td class="text-end">£@student.ClassPrice.ToString("0.00")</td>
                                     </tr>
