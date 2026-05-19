@@ -1,18 +1,22 @@
-﻿using System;
+﻿using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
+using Microsoft.Owin.Security;
+using PayPalCheckoutSdk.Orders;
+using SwimmingSchool_Implementation.Models;
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
-using SwimmingSchool_Implementation.Models;
 
 namespace SwimmingSchool_Implementation.Controllers
 {
-    [Authorize]
+    [Authorize] // Must be logged in to see the dashboard
     public class ManageController : Controller
     {
+
+        private SwimSchoolDbContext db = new SwimSchoolDbContext(); //instance of the database
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
@@ -54,6 +58,50 @@ namespace SwimmingSchool_Implementation.Controllers
         // GET: /Manage/Index
         public async Task<ActionResult> Index(ManageMessageId? message)
         {
+            var userId = User.Identity.GetUserId();
+            var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+
+            // 1. Get the raw user from the DB
+            var user = userManager.FindById(userId);
+            if (user == null) return HttpNotFound();
+
+            // 2. Check their roles
+            var roles = userManager.GetRoles(user.Id);
+            bool isTeacher = roles.Contains("Teacher");
+            bool isManager = roles.Contains("Manager");
+
+            // 3. Map to our Unified ViewModel
+            var model = new IndexViewModel
+            {
+                FirstName = user.FirstName,
+                SecondName = user.SecondName,
+                Email = user.Email,
+                // Assume you added Address, Bio, etc. to your ApplicationUser class
+                AddressLine1 = user.AddressLine1,
+                AddressLine2 = user.AddressLine2,
+                City = user.City,
+                Postcode = user.Postcode,
+                Country = user.Country,
+                DateOfBirth = user.DateOfBirth,
+
+                IsTeacher = isTeacher,
+                IsManager = isManager,
+                HasPassword = HasPassword(),
+                PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
+                TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
+                Logins = await UserManager.GetLoginsAsync(userId),
+                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
+            };
+
+            // 4. Map teacher-specific fields if applicable
+            if (isTeacher)
+            {
+                model.Bio = user.Bio;
+                model.TeacherPreference = user.TeacherPreference;
+                model.ProfileImage = user.ProfileImage;
+            }
+
+            //built-in logic
             ViewBag.StatusMessage =
                 message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
                 : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
@@ -63,16 +111,86 @@ namespace SwimmingSchool_Implementation.Controllers
                 : message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
                 : "";
 
-            var userId = User.Identity.GetUserId();
-            var model = new IndexViewModel
+            if (TempData["StatusMessage"] != null)
             {
-                HasPassword = HasPassword(),
-                PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
-                TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
-                Logins = await UserManager.GetLoginsAsync(userId),
-                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
-            };
+                ViewBag.StatusMessage = TempData["StatusMessage"].ToString();
+            }
+
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> UpdateProfile(IndexViewModel model, HttpPostedFileBase profileUpload)
+        {
+            var userId = User.Identity.GetUserId();
+            var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+
+            // 1. Get the current user from the database
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null) return HttpNotFound();
+
+            // 2. Update the Shared Fields
+            user.FirstName = model.FirstName;
+            user.SecondName = model.SecondName;
+            user.PhoneNumber = model.PhoneNumber;
+            user.DateOfBirth = model.DateOfBirth;
+            user.AddressLine1 = model.AddressLine1;
+            user.AddressLine2 = model.AddressLine2;
+            user.City = model.City;
+            user.Postcode = model.Postcode;
+            user.Country = model.Country;
+
+            // Note: We don't update the Email here. Changing an email address usually 
+            // requires sending a new verification link for security purposes!
+
+            // 3. Update Teacher-Only Fields (if applicable)
+            var roles = await userManager.GetRolesAsync(user.Id);
+            if (roles.Contains("Teacher"))
+            {
+                user.Bio = model.Bio;
+                user.TeacherPreference = model.TeacherPreference;
+
+                // 4. Handle the Profile Picture Upload
+                if (profileUpload != null && profileUpload.ContentLength > 0)
+                {
+                    // Define where the image will be saved
+                    var uploadDir = "~/Content/Images/";
+                    var physicalPath = Server.MapPath(uploadDir);
+
+                    // Create the folder if it doesn't exist yet
+                    if (!Directory.Exists(physicalPath))
+                    {
+                        Directory.CreateDirectory(physicalPath);
+                    }
+
+                    // Create a unique file name so users don't overwrite each other's photos
+                    var fileName = Path.GetFileName(profileUpload.FileName);
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                    var imagePath = Path.Combine(physicalPath, uniqueFileName);
+
+                    // Save the file to your server
+                    profileUpload.SaveAs(imagePath);
+
+                    // Save the URL path to the database
+                    user.ProfileImage = uniqueFileName;
+                }
+            }
+
+            // 5. Save everything to the database
+            var result = await userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                // Pass a success message to the next page load using TempData
+                TempData["StatusMessage"] = "Your profile has been successfully updated!";
+
+                // This is the magic line that keeps them on the same page!
+                return RedirectToAction("Index");
+            }
+
+            // If something goes wrong, send them back with an error
+            return RedirectToAction("Index", new { message = ManageMessageId.Error });
         }
 
         //
