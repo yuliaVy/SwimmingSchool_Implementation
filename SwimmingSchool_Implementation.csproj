@@ -56,6 +56,12 @@
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="PayPalCheckoutSdk, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\PayPalCheckoutSdk.1.0.4\lib\netstandard2.0\PayPalCheckoutSdk.dll</HintPath>
+    </Reference>
+    <Reference Include="PayPalHttp-Dotnet, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\PayPalHttp.1.0.1\lib\netstandard2.0\PayPalHttp-Dotnet.dll</HintPath>
+    </Reference>
     <Reference Include="Stripe.net, Version=51.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Stripe.net.51.1.0\lib\net462\Stripe.net.dll</HintPath>
     </Reference>

@@ -121,6 +121,7 @@
                             <label class="form-label small fw-bold text-primary">Selected Class for this Swimmer</label>
                             <div class="d-flex align-items-center gap-3">
                                 @Html.HiddenFor(m => m.Students[i].SelectedLessonId, new { @class = "lesson-id-input" })
+                                <input type="hidden" class="lesson-price-input" value="@Model.Students[i].LessonPrice"/>
                                 <input type="text" readonly class="form-control-plaintext fw-bold lesson-title-display" value="@Model.Students[i].SelectedLessonTitle" placeholder="No class selected" />
                                 <button type="button" class="btn btn-warning btn-sm text-nowrap" onclick="openLessonModal(@i)">Choose/Change Class</button>
                             </div>
@@ -143,8 +144,40 @@
                 }
             </div>
 
+            <h4 class="mb-3" style="color: #00A8E8;">3. Payment Options</h4>
+            <div class="p-4 mb-4 rounded border bg-light">
+
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input fs-5" type="checkbox" id="PayDepositOnly" name="PayDepositOnly" value="true" onchange="calculateTotal()">
+                    <input type="hidden" name="PayDepositOnly" value="false" />
+                    <label class="form-check-label fs-5 ms-2 pt-1" for="PayDepositOnly">
+                        <strong>Pay 20% Deposit Only</strong> <br />
+                        <span class="text-muted small">Pay a 20% deposit today to secure your spots. The remaining balance is due on the day of your first lesson.</span>
+                    </label>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <h4 class="fw-bold m-0">Total to pay today:</h4>
+                    <h3 class="fw-bold m-0 text-success" id="displayTotal">£0.00</h3>
+                </div>
+            </div>
+
             <hr class="my-5" />
-            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">Complete Registration & Pay</button>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <button type="submit" name="PaymentMethod" value="Stripe" class="btn btn-dark btn-lg w-100 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2">
+                        <span>Pay with Card (Stripe)</span>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" name="PaymentMethod" value="PayPal" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2" style="color: #003087;">
+                        <span>Pay with PayPal</span>
+                    </button>
+                </div>
+            </div>
         }
     </div>
 </div>
@@ -193,7 +226,7 @@
                                     data-audience="@lesson.LessonType"
                                     data-lesson-id="@lesson.Id"
                                     data-capacity="@lesson.AvailablePlaces"
-                                    onclick="selectLessonForStudent(@lesson.Id, '@lesson.Title (@lesson.DayOfWeek)')">
+                                    onclick="selectLessonForStudent(@lesson.Id, '@lesson.Title (@lesson.DayOfWeek)', @lesson.Price)">
 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -223,6 +256,7 @@
 
 @section Scripts {
     <script>
+        window.onload = calculateTotal;
         let currentEditingStudentIndex = 0;
         const lessonModal = new bootstrap.Modal(document.getElementById('lessonModal'));
 
@@ -260,6 +294,32 @@
                     item.style.display = 'none';
                 }
             });
+        }
+
+        // ---- THE CALCULATOR
+        function calculateTotal() {
+            let subtotal = 0;
+
+            // Find all hidden price inputs across all active student blocks
+            const priceInputs = document.querySelectorAll('.lesson-price-input');
+
+            priceInputs.forEach(input => {
+                const price = parseFloat(input.value);
+                // If it's a valid number greater than 0, add it to our subtotal
+                if (!isNaN(price) && price > 0) {
+                    subtotal += price;
+                }
+            });
+
+            // Check if deposit only is selected
+            const isDeposit = document.getElementById('PayDepositOnly').checked;
+            const finalTotal = isDeposit ? (subtotal * 0.20) : subtotal;
+
+            // Update the big green text
+            const display = document.getElementById('displayTotal');
+            if (display) {
+                display.innerText = `£${finalTotal.toFixed(2)}`;
+            }
         }
 
         // ----- CAPACITY TRACKING LOGIC -----
@@ -323,13 +383,16 @@
         }
 
         // Triggered when user clicks a lesson inside the modal
-        function selectLessonForStudent(lessonId, lessonTitle) {
+        function selectLessonForStudent(lessonId, lessonTitle, lessonPrice) {
             const studentBlock = document.querySelector(`.student-block[data-index="${currentEditingStudentIndex}"]`);
 
             studentBlock.querySelector('.lesson-id-input').value = lessonId;
             studentBlock.querySelector('.lesson-title-display').value = lessonTitle;
+            studentBlock.querySelector('.lesson-price-input').value = lessonPrice;
 
             lessonModal.hide();
+
+            calculateTotal();
         }
 
         // Add Dynamic Student
@@ -362,6 +425,9 @@
                     input.selectedIndex = 0;
                 }
 
+                if (input.classList.contains('lesson-price-input')) {
+                    input.value = "0";
+                }
                 // Update names and IDs for MVC binding
                 if (input.name) input.name = input.name.replace(/\[0\]/g, `[${newIndex}]`);
                 if (input.id) input.id = input.id.replace(/_0__/g, `_${newIndex}__`);
@@ -371,6 +437,8 @@
             chooseBtn.setAttribute('onclick', `openLessonModal(${newIndex})`);
 
             container.appendChild(newBlock);
+            // Recalculate the total 
+            calculateTotal();
         }
 
         // Remove Dynamic Student
@@ -392,6 +460,10 @@
                     if (input.id) input.id = input.id.replace(/_\d+__/g, `_${index}__`);
                 });
             });
+            // Recalculate the total so the price drops when a student is removed!
+            calculateTotal();
         }
+
+
     </script>
 }
