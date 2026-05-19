@@ -1,98 +1,114 @@
-﻿@model SwimmingSchool_Implementation.Models.Booking
+﻿@model SwimmingSchool_Implementation.Models.BookingSuccessViewModel
 
 @{
-    ViewBag.Title = "Registration Successful";
+    ViewBag.Title = "Booking Confirmed";
 }
 
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
 <div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="text-success border border-success rounded-circle d-inline-block p-3 mb-3">✓</h1>
-        <h2>Registration Complete!</h2>
-        <p class="lead">Here is the data that was successfully saved to the database.</p>
-    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
 
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Booking & Payment Record</h5>
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#198754" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                    </svg>
                 </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr><th>Booking ID:</th><td>@Model.BookingId</td></tr>
-                        <tr><th>Booking Date:</th><td>@Model.BookingDate.ToString("g")</td></tr>
-                        <tr><th>Status:</th><td><span class="badge bg-success">@Model.Status</span></td></tr>
-                        <tr><th>Total Amount:</th><td>£@Model.TotalAmount</td></tr>
-
-                        @if (Model.Payments != null && Model.Payments.Any())
-                        {
-                            var payment = Model.Payments.First();
-                            <tr><th>Payment Date:</th><td>@payment.PaymentDate.ToString("g")</td></tr>
-                            <tr><th>Transaction ID:</th><td><small class="text-muted">@payment.TransactionId</small></td></tr>
-                        }
-                    </table>
-                </div>
+                <h1 class="text-success fw-bold">Booking Confirmed!</h1>
+                <p class="text-muted fs-5">Thank you, @Model.AccountHolderName. We've sent a confirmation to <strong>@Model.Email</strong>.</p>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Parent/User Account</h5>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="m-0 fw-bold">Booking Summary</h5>
                 </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr><th>Account ID:</th><td><small class="text-muted">@Model.UserId</small></td></tr>
-                        <tr><th>First Name:</th><td>@Model.User.FirstName</td></tr>
-                        <tr><th>Last Name:</th><td>@Model.User.SecondName</td></tr>
-                        <tr><th>Email (Username):</th><td>@Model.User.Email</td></tr>
-                        <tr><th>Phone:</th><td>@Model.User.PhoneNumber</td></tr>
-                    </table>
-                </div>
-            </div>
-        </div>
 
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0">Student Profile</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr><th>Student ID:</th><td>@Model.StudentId</td></tr>
-                        <tr><th>First Name:</th><td>@Model.Student.FirstName</td></tr>
-                        <tr><th>Last Name:</th><td>@Model.Student.SecondName</td></tr>
-                        <tr><th>Gender:</th><td>@Model.Student.Gender</td></tr>
-                        <tr><th>Date of Birth:</th><td>@Model.Student.DateOfBirth.ToString("dd MMM yyyy")</td></tr>
-                    </table>
-                </div>
-            </div>
-        </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4 border-bottom pb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Account Holder</p>
+                            <p class="mb-0 fw-bold">@Model.AccountHolderName</p>
+                            <p class="mb-0">@Model.PhoneNumber</p>
+                        </div>
+                        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Date & Time</p>
+                            <p class="mb-0">@Model.TransactionDate.ToString("f")</p>
+                        </div>
+                    </div>
 
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Enrolled Lessons</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.LessonsBookings != null && Model.LessonsBookings.Any())
+                    <h6 class="fw-bold mb-3 text-primary">Registered Swimmers & Classes</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Swimmer Name</th>
+                                    <th>Class & Venue</th>
+                                    <th>Schedule</th>
+                                    <th class="text-end">Full Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var student in Model.Students)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@student.StudentName</td>
+                                        <td>
+                                            @student.ClassName<br />
+                                            <small class="text-muted">@student.Venue</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">@student.DayOfWeek</span><br />
+                                            <span class="badge bg-secondary">@student.LessonTime</span>
+                                        </td>
+                                        <td class="text-end">£@student.ClassPrice.ToString("0.00")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row justify-content-end">
+                        <div class="col-md-6 col-lg-5">
+                            <div class="bg-light p-3 rounded border">
+                                <h6 class="fw-bold text-primary mb-3">Payment Details</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Method:</span>
+                                    <span class="fw-bold">@Model.PaymentMethod</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Payment Type:</span>
+                                    <span class="fw-bold">@Model.PaymentType</span>
+                                </div>
+                                <hr />
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold fs-5">Amount Paid Today:</span>
+                                    <span class="fw-bold fs-4 text-success">£@Model.TotalPaidToday.ToString("0.00")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.OutstandingBalance > 0)
                     {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var lb in Model.LessonsBookings)
-                            {
-                                <li class="list-group-item px-0">
-                                    <strong>@lb.Lesson.Title</strong><br />
-                                    <span class="text-muted">Day: @lb.Lesson.DayOfWeek | Price: £@lb.Lesson.Price</span>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-danger">No lessons found attached to this booking!</p>
+                        <div class="alert alert-danger mt-4 d-flex align-items-center shadow-sm" role="alert">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-3" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+                            </svg>
+                            <div>
+                                <h4 class="alert-heading fw-bold mb-1">Outstanding Balance Due: £@Model.OutstandingBalance.ToString("0.00")</h4>
+                                <p class="mb-0 fs-6">Because you paid a deposit today, the remaining balance must be paid in full <strong>on the day of your first lesson</strong>.</p>
+                            </div>
+                        </div>
                     }
                 </div>
+
+               </div>
+            <div class="text-center mt-5">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-outline-primary btn-lg px-5">Return to Home</a>
             </div>
+
         </div>
     </div>
 </div>

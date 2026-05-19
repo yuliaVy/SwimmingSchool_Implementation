@@ -104,6 +104,10 @@ namespace SwimmingSchool_Implementation.Models
 
         public int SelectedLessonId{ get; set; }
 
+        // True if they check the 20% deposit box, False if they want to pay in full
+        public bool PayDepositOnly { get; set; }
+
+        // Will hold either "Stripe" or "PayPal" based on which button they click
         public string PaymentMethod { get; set; }
 
         public List<int> AcceptedPolicies { get; set; }
@@ -160,15 +164,29 @@ namespace SwimmingSchool_Implementation.Models
         public string SwimExperience { get; set; }
     }
 
-    public class RegistrationSuccessViewModel
+    public class BookingSuccessViewModel
     {
-        public User User { get; set; }
+        public string AccountHolderName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
 
-        public List<Booking> Bookings { get; set; }
+        public string PaymentMethod { get; set; }
+        public decimal TotalPaidToday { get; set; }
+        public string PaymentType { get; set; } // "20% Deposit" or "Paid in Full"
+        public DateTime TransactionDate { get; set; }
 
-        public decimal TotalPaid { get; set; }
+        public decimal OutstandingBalance { get; set; }
+        public List<SuccessStudentDetail> Students { get; set; } = new List<SuccessStudentDetail>();
+    }
 
-        public DateTime RegistrationDate { get; set; }
+    public class SuccessStudentDetail
+    {
+        public string StudentName { get; set; }
+        public string ClassName { get; set; }
+        public string DayOfWeek { get; set; }
+        public string LessonTime { get; set; }
+        public string Venue { get; set; }
+        public decimal ClassPrice { get; set; }
     }
 
 
