@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNet.Identity;
+﻿using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Web;
 
 namespace SwimmingSchool_Implementation.Models
 {
@@ -9,9 +11,62 @@ namespace SwimmingSchool_Implementation.Models
     {
         public bool HasPassword { get; set; }
         public IList<UserLoginInfo> Logins { get; set; }
-        public string PhoneNumber { get; set; }
         public bool TwoFactor { get; set; }
         public bool BrowserRemembered { get; set; }
+
+        // --- SHARED FIELDS (Everyone gets these) ---
+        [Required]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; }
+
+        [Required]
+        [Display(Name = "Last Name")]
+        public string SecondName { get; set; }
+
+        [Required(ErrorMessage = "You must provide a mobile phone number")]
+        [Display(Name = "Mobile Number")]
+        [DataType(DataType.PhoneNumber)]
+        [RegularExpression(@"^\(?([0-9]{3})\)?[-. ]?([0-9]{4})[-. ]?([0-9]{4})$", ErrorMessage = "Not a valid mobile number")]
+        public string PhoneNumber { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Display(Name = "Address Lane 1")]
+        public string AddressLine1 { get; set; }
+
+        [Display(Name = "Address Lane 2")]
+        public string AddressLine2 { get; set; }
+
+        [Display(Name = "City")]
+        public string City { get; set; }
+
+        [Display(Name = "Post Code")]
+        public string Postcode { get; set; }
+
+        [Display(Name = "Country")]
+        public string Country { get; set; }
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
+        public DateTime? DateOfBirth { get; set; }
+
+        // --- ROLE IDENTIFIER ---
+        // This tells our HTML whether to show the extra boxes
+        public bool IsTeacher { get; set; }
+        public bool IsManager { get; set; }
+
+        // --- TEACHER-ONLY FIELDS ---
+        public string Bio { get; set; }
+
+        [Display(Name = "Teaching Preferences")]
+        public TeacherPreference TeacherPreference { get; set; }
+
+        // We use HttpPostedFileBase to catch the uploaded image file
+        public HttpPostedFileBase ProfilePhotoUpload { get; set; }
+        public string ProfileImage { get; set; }
     }
 
     public class ManageLoginsViewModel
