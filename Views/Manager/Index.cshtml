@@ -1,0 +1,134 @@
+﻿@{
+    ViewBag.Title = "Manager Dashboard";
+}
+
+<div class="container py-5">
+    
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <h2 class="text-primary fw-bold mb-1">Manager Control Center</h2>
+            <p class="text-muted mb-0">Welcome back! Here is an overview of your school.</p>
+        </div>
+        <div class="col-md-6 mt-3 mt-md-0 d-flex justify-content-md-end gap-3">
+            <div class="bg-light border rounded px-4 py-2 text-center shadow-sm">
+                <h6 class="text-muted text-uppercase small fw-bold mb-0">Active Students</h6>
+                <h3 class="text-primary fw-bold mb-0">@ViewBag.TotalStudents</h3>
+            </div>
+            <div class="bg-light border rounded px-4 py-2 text-center shadow-sm">
+                <h6 class="text-muted text-uppercase small fw-bold mb-0">Total Bookings</h6>
+                <h3 class="text-success fw-bold mb-0">@ViewBag.ActiveBookings</h3>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Operations & Scheduling</h5>
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Timetable", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-primary text-white rounded p-3 me-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-calendar-week" viewBox="0 0 16 16">
+                                <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Weekly Timetable</h5>
+                            <p class="text-muted small mb-0">View the master schedule and daily class rosters.</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Bookings", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-success text-white rounded p-3 me-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16">
+                                <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27zM0 2v12c0 .27.107.52.293.707l.5 1a1.5 1.5 0 0 0 1.414.394l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414-.394l.5-1A1.5 1.5 0 0 0 16 14V2a1.5 1.5 0 0 0-.293-.707l-.5-1a1.5 1.5 0 0 0-1.414-.394l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414.394l-.5 1A1.5 1.5 0 0 0 0 2z"/>
+                                <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Bookings & Payments</h5>
+                            <p class="text-muted small mb-0">Track transactions, deposits, and booking history.</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Reports", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-info text-white rounded p-3 me-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-bar-chart-line" viewBox="0 0 16 16">
+                                <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-5 0v-3H2v3h2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Export Reports</h5>
+                            <p class="text-muted small mb-0">Generate financial and attendance reports in PDF/Excel.</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Directory Management</h5>
+    <div class="row g-4">
+        
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Teachers", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2">Swim Instructors</h6>
+                        <p class="text-muted small mb-0">Manage your teaching staff, bios, and preferences.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Students", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2">Registered Learners</h6>
+                        <p class="text-muted small mb-0">View all active swimmers and their medical notes.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("AccountHolders", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2">Account Holders (Parents)</h6>
+                        <p class="text-muted small mb-0">Access billing contacts and user account details.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        /* A little CSS to make the cards lift up smoothly when hovered */
+        .custom-hover-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .custom-hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+            cursor: pointer;
+        }
+    </style>
+}

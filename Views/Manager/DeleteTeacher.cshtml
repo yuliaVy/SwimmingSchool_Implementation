@@ -1,0 +1,59 @@
+﻿@model SwimmingSchool_Implementation.Models.TeacherListViewModel
+
+@{
+    ViewBag.Title = "Delete Teacher";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+
+                    <h5 class="mb-4">Are you sure you want to permanently delete this instructor?</h5>
+
+                    <div class="bg-light p-3 rounded border mb-4 d-flex align-items-center justify-content-center text-start mx-auto" style="max-width: 300px;">
+                        @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                        {
+                            <img src="~/Content/Images/@Model.ProfileImage class="rounded-circle object-fit-cover me-3 shadow-sm" width="60" height="60" alt="Profile" />
+                        }
+                        else
+                        {
+                            <div class="bg-secondary rounded-circle d-flex justify-content-center align-items-center text-white me-3 shadow-sm" style="width:60px; height:60px;">N/A</div>
+                        }
+                        <div>
+                            <h6 class="fw-bold mb-0">@Model.FullName</h6>
+                            <small class="text-muted">@Model.Email</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning text-start small mb-4">
+                        <strong>Warning:</strong> This action cannot be undone.
+                        <ul>
+                            <li>The user's login access will be permanently revoked.</li>
+                            <li>All venue associations will be wiped.</li>
+                            <li>If this teacher is actively assigned to upcoming classes, you must manually reassign those classes to another instructor.</li>
+                        </ul>
+                    </div>
+
+                    @using (Html.BeginForm("DeleteTeacher", "Manager", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.Id)
+
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="@Url.Action("Teachers", "Manager")" class="btn btn-light px-4">Cancel, keep teacher</a>
+                            <button type="submit" class="btn btn-danger fw-bold px-4">Yes, permanently delete</button>
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
