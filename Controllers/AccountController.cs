@@ -493,11 +493,15 @@ namespace SwimmingSchool_Implementation.Controllers
                 return View(model);
             }
 
+
             // 2. LOOP THROUGH EACH STUDENT AND CREATE THEIR BOOKINGS
             foreach (var studentVm in model.Students)
             {
+
                 var lesson = db.Lessons.Find(studentVm.SelectedLessonId);
                 if (lesson == null) continue; // Skip if invalid lesson
+                //check the amount paid for a lesson
+                decimal amountPaidForThisLesson = model.PayDepositOnly ? (lesson.Price * 0.20m) : lesson.Price;
 
                 // Create Student
                 var student = new Student
@@ -522,7 +526,7 @@ namespace SwimmingSchool_Implementation.Controllers
                     StudentId = student.Id,
                     BookingDate = DateTime.Now,
                     TotalAmount = lesson.Price,
-                    AmountPaid = lesson.Price,
+                    AmountPaid = amountPaidForThisLesson,
                     AdminNotes = "Standard Registration",
                     Status = BookingStatus.Completed
                 };
@@ -584,7 +588,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 db.Payments.Add(new Payment
                 {
                     BookingId = booking.BookingId,
-                    Amount = lesson.Price,
+                    Amount = amountPaidForThisLesson,
                     PaymentDate = DateTime.Now,
                     Success = true
                 });
