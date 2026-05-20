@@ -161,7 +161,7 @@ namespace SwimmingSchool_Implementation.Models
                     PhoneNumber = "02244772233",
                     DateRegistered = new DateTime(2018, 9, 8)
                 };
-                if (userManager.FindByName("member@aqualife.com") == null)
+                if (userManager.FindByName("learner@aqualife.com") == null)
                 {
                     //super relaxed password validator
                     userManager.PasswordValidator = new PasswordValidator()
@@ -465,6 +465,41 @@ namespace SwimmingSchool_Implementation.Models
 
                 //save the changes to the database
                 context.SaveChanges();
+
+                //*******************************
+                //seeding BookingSessions table
+                //*******************************
+                var bookingSession1 = new BookingSession()
+                {
+                    BookingId = booking1.BookingId,
+                    SessionDate = new DateTime(2026, 5, 20),
+                    Status = SessionStatus.Scheduled
+                };
+                context.BookingSessions.Add(bookingSession1);
+
+                var bookingSession2 = new BookingSession()
+                {
+                    BookingId = booking1.BookingId,
+                    SessionDate = new DateTime(2025, 5, 22),
+                    Status = SessionStatus.Attended
+                };
+                context.BookingSessions.Add(bookingSession2);
+
+                var bookingSession3 = new BookingSession()
+                {
+                    BookingId = booking1.BookingId,
+                    SessionDate = new DateTime(2025, 5, 29),
+                    Status = SessionStatus.NoShow
+                };
+                context.BookingSessions.Add(bookingSession3);
+
+                var bookingSession4 = new BookingSession()
+                {
+                    BookingId = booking1.BookingId,
+                    SessionDate = new DateTime(2025, 6, 2),
+                    Status = SessionStatus.CancelledByUser
+                };
+                context.BookingSessions.Add(bookingSession4);
 
             }// end of if statement checking if there are any users in the database
         }//end of Seed method
