@@ -90,6 +90,15 @@
                                         <p class="mb-1"><strong>Instructor:</strong> @lesson.TeacherName</p>
                                         <p class="mb-3"><strong>Venue:</strong> @lesson.VenueName</p>
 
+                                        @if (lesson.PaymentStatus == "Paid in Full")
+                                        {
+                                            <span class="badge bg-success mb-3"><i class="bi bi-check-circle"></i> Paid in Full</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark mb-3"><i class="bi bi-clock-history"></i> Deposit Only</span>
+                                        }
+
                                         @if (lesson.Status == SwimmingSchool_Implementation.Models.SessionStatus.Scheduled)
                                         {
                                             <button type="button" class="btn btn-outline-danger w-100 fw-bold mt-auto"

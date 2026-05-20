@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNet.Identity;
+using Stripe;
 using SwimmingSchool_Implementation.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using System.Data.Entity;
 
 namespace SwimmingSchool_Implementation.Controllers
 {
@@ -56,8 +57,10 @@ namespace SwimmingSchool_Implementation.Controllers
                     LessonTime = lesson.StartTime.ToString(@"hh\:mm"),
                     VenueName = lesson.Venue?.Name ?? "TBC",
                     TeacherName = lesson.Teacher != null ? $"{lesson.Teacher.FirstName} {lesson.Teacher.SecondName}" : "TBC",
-                    Status = s.Status
+                    Status = s.Status,
+                    PaymentStatus = s.Booking.AmountPaid < s.Booking.TotalAmount ? "Deposit Only" : "Paid in Full"
                 };
+
                 // Sort into the correct bucket based on the date
                 // We use DateTime.Today so lessons happening today still show in Upcoming until tomorrow
                 if (s.SessionDate.Date >= DateTime.Today)
@@ -77,8 +80,8 @@ namespace SwimmingSchool_Implementation.Controllers
         }
 
         // 2. POST: /Dashboard/CancelSession
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
         public ActionResult CancelSession(int sessionId)
         {
             var userId = User.Identity.GetUserId();
@@ -103,6 +106,87 @@ namespace SwimmingSchool_Implementation.Controllers
 
             return RedirectToAction("MyLessons");
         }
+
+
+        /// summary
+        /// Refund through stripe or paypal, not working
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public ActionResult CancelSession(int sessionId)
+        //{
+        //    var userId = User.Identity.GetUserId();
+
+        //    // 1. Get the Session AND the Parent Booking so we can access the money and Transaction ID
+        //    var session = db.BookingSessions
+        //        .Include(s => s.Booking)
+        //        .FirstOrDefault(s => s.Id == sessionId && s.Booking.UserId == userId);
+
+        //    if (session != null && session.Status == SessionStatus.Scheduled)
+        //    {
+        //        // 2. Calculate the 48-hour rule
+        //        bool isLateCancel = (session.SessionDate - DateTime.Now).TotalHours < 48;
+
+        //        if (!isLateCancel && session.Booking.AmountPaid >= session.Booking.TotalAmount)
+        //        {
+        //            // ==========================================
+        //            // REFUND LOGIC (Early Cancel & Paid in Full)
+        //            // ==========================================
+
+        //            // Calculate: (Total Block Price / 4 classes) * 80%
+        //            decimal singleClassValue = session.Booking.TotalAmount / 4;
+        //            decimal refundAmount = singleClassValue * 0.80m;
+
+        //            try
+        //            {
+        //                if (session.Booking.PaymentMethod == "Stripe")
+        //                {
+        //                    // Call the Stripe Refund API
+        //                    var options = new Stripe.RefundCreateOptions
+        //                    {
+        //                        // You MUST save the Stripe PaymentIntentId to your DB during checkout for this to work!
+        //                        PaymentIntent = session.Booking.TransactionId,
+        //                        Amount = (long)(refundAmount * 100), // Convert to pence
+        //                        Reason = RefundReasons.RequestedByCustomer
+        //                    };
+        //                    var service = new Stripe.RefundService();
+        //                    service.Create(options);
+        //                }
+        //                else if (session.Booking.PaymentMethod == "PayPal")
+        //                {
+        //                    // PayPal SDK Refund Logic goes here using the PayPal Capture ID
+        //                }
+
+        //                // Log the refund in your database so admins can track it
+        //                db.Refunds.Add(new RefundRecord
+        //                {
+        //                    BookingId = session.BookingId,
+        //                    Amount = refundAmount,
+        //                    DateProcessed = DateTime.Now
+        //                });
+
+        //                TempData["SuccessMessage"] = $"Lesson cancelled successfully. £{refundAmount:0.00} has been refunded to your original payment method.";
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                // If Stripe's API fails, still cancel the class, but alert the admin
+        //                TempData["SuccessMessage"] = "Lesson cancelled. Your refund requires manual processing. Support has been notified.";
+        //                System.Diagnostics.Debug.WriteLine($"Refund failed: {ex.Message}");
+        //            }
+        //        }
+        //        else
+        //        {
+        //            // Late cancellation OR they only paid a deposit (deposits are usually non-refundable)
+        //            TempData["SuccessMessage"] = "Lesson cancelled successfully. As per policy, no refund is issued for late cancellations or deposit-only bookings.";
+        //        }
+
+        //        // 3. Mark the class as cancelled in the database
+        //        session.Status = SessionStatus.CancelledByUser;
+        //        db.SaveChanges();
+        //    }
+
+        //    return RedirectToAction("MyLessons");
+        //}
 
     }
 }
