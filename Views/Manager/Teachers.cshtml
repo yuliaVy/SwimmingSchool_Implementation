@@ -1,0 +1,83 @@
+﻿@model IEnumerable<SwimmingSchool_Implementation.Models.TeacherListViewModel>
+
+@{
+    ViewBag.Title = "Manage Teachers";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary fw-bold mb-0">Swim Instructors</h2>
+            <p class="text-muted">Manage your teaching staff accounts and profiles.</p>
+        </div>
+        <div>
+            <a href="@Url.Action("CreateTeacher", "Manager")" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-person-plus-fill me-2"></i> Add New Teacher
+            </a>
+            <a href="@Url.Action("Index", "Manager")" class="btn btn-outline-secondary ms-2">Back to Hub</a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Instructor</th>
+                            <th>Contact Details</th>
+                            <th>Teaching Preference</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No teachers found. Click "Add New Teacher" to get started.</td>
+                            </tr>
+                        }
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(item.ProfileImage))
+                                        {
+                                            <img src="~/Content/Images/@item.ProfileImage" class="rounded-circle object-fit-cover me-3 shadow-sm" width="45" height="45" alt="Profile" />
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-secondary rounded-circle d-flex justify-content-center align-items-center text-white me-3 shadow-sm" style="width:45px; height:45px; font-size: 0.8rem;">N/A</div>
+                                        }
+                                        <div class="fw-bold text-dark">@item.FullName</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div><a href="mailto:@item.Email" class="text-decoration-none">@item.Email</a></div>
+                                    <small class="text-muted">@item.PhoneNumber</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">@item.Preference</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="@Url.Action("EditTeacher", "Manager", new { id = item.Id })" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+
+                                    <a href="@Url.Action("DeleteTeacher", "Manager", new { id = item.Id })" class="btn btn-sm btn-outline-danger">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

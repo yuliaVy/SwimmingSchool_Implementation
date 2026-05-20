@@ -61,14 +61,23 @@ namespace SwimmingSchool_Implementation.Controllers
             var userId = User.Identity.GetUserId();
             var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
 
-            // 1. Get the raw user from the DB
+            //  Get the raw user from the DB
             var user = userManager.FindById(userId);
             if (user == null) return HttpNotFound();
 
-            // 2. Check their roles
+            // Check their roles
             var roles = userManager.GetRoles(user.Id);
             bool isTeacher = roles.Contains("Teacher");
             bool isManager = roles.Contains("Manager");
+
+            // Get all venues in the database
+            var allVenues = db.Venues.ToList();
+
+            // Get the venues this teacher is currently assigned to
+            var currentVenueIds = db.TeacherVenues
+                                    .Where(tv => tv.TeacherId == user.Id)
+                                    .Select(tv => tv.VenueId)
+                                    .ToList();
 
             // 3. Map to our Unified ViewModel
             var model = new IndexViewModel
@@ -90,7 +99,14 @@ namespace SwimmingSchool_Implementation.Controllers
                 PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
                 TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
                 Logins = await UserManager.GetLoginsAsync(userId),
-                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
+                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId),
+                AvailableVenues = allVenues.Select(v => new VenueCheckboxItem
+                {
+                    VenueId = v.VenueId, // Or v.Id depending on your Venue model
+                    VenueName = v.Name,
+                    IsSelected = currentVenueIds.Contains(v.VenueId)
+                }).ToList()
+
             };
 
             // 4. Map teacher-specific fields if applicable
@@ -99,6 +115,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 model.Bio = user.Bio;
                 model.TeacherPreference = user.TeacherPreference;
                 model.ProfileImage = user.ProfileImage;
+
             }
 
             //built-in logic
@@ -151,6 +168,26 @@ namespace SwimmingSchool_Implementation.Controllers
                 user.Bio = model.Bio;
                 user.TeacherPreference = model.TeacherPreference;
 
+                // VENUE SAVING LOGIC
+
+                // 1. Wipe the old venue links to start fresh
+                var oldVenues = db.TeacherVenues.Where(tv => tv.TeacherId == user.Id).ToList();
+                db.TeacherVenues.RemoveRange(oldVenues);
+
+                // 2. Add the newly checked venues
+                if (model.SelectedVenueIds != null && model.SelectedVenueIds.Length > 0)
+                {
+                    foreach (var venueId in model.SelectedVenueIds)
+                    {
+                        db.TeacherVenues.Add(new TeacherVenue
+                        {
+                            TeacherId = user.Id,
+                            VenueId = venueId
+                        });
+                    }
+                }
+
+                db.SaveChanges();
                 // 4. Handle the Profile Picture Upload
                 if (profileUpload != null && profileUpload.ContentLength > 0)
                 {

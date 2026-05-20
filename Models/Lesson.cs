@@ -54,10 +54,15 @@ namespace SwimmingSchool_Implementation.Models
         public string AgeGroup { get; set; }
         public LessonType LessonType { get; set; }
 
+        [Required]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
+        [Display(Name = "Block Start Date")]
+        public DateTime BlockStartDate { get; set; }
+
 
         // --- Foreign Key & Navigation properties ---
         [ForeignKey("Teacher")]
-        [Required(ErrorMessage = "Please assign a teacher.")]
         [Display(Name = "Instructor")]
         public string UserId { get; set; }
         public User Teacher { get; set; }

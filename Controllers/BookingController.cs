@@ -23,6 +23,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 .Include(l => l.Teacher)
                 .Include(l => l.Venue)
                 .Include(l => l.LessonsBookings)
+                .Where(l => l.BlockStartDate >= DateTime.Today)
                 .AsQueryable();
 
             // FILTER BY VENUE
