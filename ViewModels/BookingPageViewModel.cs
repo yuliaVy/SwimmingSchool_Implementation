@@ -59,5 +59,6 @@ namespace SwimmingSchool_Implementation.Models
                 return (SessionDate - DateTime.Now).TotalDays < 2;
             }
         }
+        public string PaymentStatus { get; set; }
     }
 }
