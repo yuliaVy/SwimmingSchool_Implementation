@@ -63,7 +63,6 @@ namespace SwimmingSchool_Implementation.Models
 
         // --- Foreign Key & Navigation properties ---
         [ForeignKey("Teacher")]
-        [Required(ErrorMessage = "Please assign a teacher.")]
         [Display(Name = "Instructor")]
         public string UserId { get; set; }
         public User Teacher { get; set; }

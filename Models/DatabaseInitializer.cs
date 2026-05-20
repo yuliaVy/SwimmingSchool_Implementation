@@ -393,7 +393,7 @@ namespace SwimmingSchool_Implementation.Models
 
                 var booking1 = new Booking()
                 {
-                    Status = BookingStatus.Confirmed,
+                    Status = BookingStatus.Completed,
                     IsDepositOnly = false,
                     BookingDate = DateTime.Now.AddDays(-1),
                     TotalAmount = lesson2.Price,
@@ -406,7 +406,7 @@ namespace SwimmingSchool_Implementation.Models
                 var booking2 = new Booking()
                 {
                     User = learner1,
-                    Status = BookingStatus.Pending,
+                    Status = BookingStatus.Completed,
                     IsDepositOnly = true,
                     BookingDate = DateTime.Now,
                     TotalAmount = lesson2.Price,

@@ -28,7 +28,7 @@ namespace SwimmingSchool_Implementation.Models
             // Tell EF to turn OFF Cascade Delete for the Teacher -> Lesson relationship
             modelBuilder.Entity<Lesson>()
                 .HasRequired(l => l.Teacher)
-                .WithMany(u => u.TaughtLessons) // Make sure this matches the list name in your User class!
+                .WithMany() 
                 .HasForeignKey(l => l.UserId)
                 .WillCascadeOnDelete(false);
         }

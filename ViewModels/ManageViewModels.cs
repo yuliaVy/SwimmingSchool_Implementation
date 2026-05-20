@@ -67,6 +67,10 @@ namespace SwimmingSchool_Implementation.Models
         // We use HttpPostedFileBase to catch the uploaded image file
         public HttpPostedFileBase ProfilePhotoUpload { get; set; }
         public string ProfileImage { get; set; }
+        public List<VenueCheckboxItem> AvailableVenues { get; set; } = new List<VenueCheckboxItem>();
+
+        // NEW: Used to "catch" the checked boxes when the form is submitted
+        public int[] SelectedVenueIds { get; set; }
     }
 
     public class ManageLoginsViewModel
@@ -156,5 +160,7 @@ namespace SwimmingSchool_Implementation.Models
         [Required(ErrorMessage = "Please enter your message.")]
         public string Message { get; set; }
     }
+
+
 
 }

@@ -216,9 +216,23 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LearnersController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\ManagerController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202605202038049_InitialCreate.cs" />
+    <Compile Include="Migrations\202605202038049_InitialCreate.Designer.cs">
+      <DependentUpon>202605202038049_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202605202042281_MakeTeacherNullable.cs" />
+    <Compile Include="Migrations\202605202042281_MakeTeacherNullable.Designer.cs">
+      <DependentUpon>202605202042281_MakeTeacherNullable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202605202054524_FixPendingChanges.cs" />
+    <Compile Include="Migrations\202605202054524_FixPendingChanges.Designer.cs">
+      <DependentUpon>202605202054524_FixPendingChanges.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\BookingSession.cs" />
     <Compile Include="Models\TeacherVenue.cs" />
     <Compile Include="Models\Venue.cs" />
@@ -234,6 +248,7 @@
     <Compile Include="Models\PolicyAgreement.cs" />
     <Compile Include="Models\Student.cs" />
     <Compile Include="Models\User.cs" />
+    <Compile Include="ViewModels\ManagersViewModels.cs" />
     <Compile Include="ViewModels\ManageViewModels.cs" />
     <Compile Include="Models\SwimSchoolDbContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -321,6 +336,11 @@
     <Content Include="Views\Account\Success.cshtml" />
     <Content Include="Views\Home\Team.cshtml" />
     <Content Include="Views\Learners\MyLessons.cshtml" />
+    <Content Include="Views\Manager\Index.cshtml" />
+    <Content Include="Views\Manager\Teachers.cshtml" />
+    <Content Include="Views\Manager\EditTeacher.cshtml" />
+    <Content Include="Views\Manager\CreateTeacher.cshtml" />
+    <Content Include="Views\Manager\DeleteTeacher.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -351,6 +371,17 @@
     <Content Include="Scripts\bootstrap.bundle.js.map" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
     <Content Include="Scripts\jquery-3.7.0.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\202605202038049_InitialCreate.resx">
+      <DependentUpon>202605202038049_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202605202042281_MakeTeacherNullable.resx">
+      <DependentUpon>202605202042281_MakeTeacherNullable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202605202054524_FixPendingChanges.resx">
+      <DependentUpon>202605202054524_FixPendingChanges.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
