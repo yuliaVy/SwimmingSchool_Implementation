@@ -21,6 +21,18 @@
                     <li>@Html.ActionLink("Find a class!", "Index", "Booking", new { area = "" }, new { @class = "nav-link" })</li>
                     <li>@Html.ActionLink("Meet the team", "Team", "Home", new { area = "" }, new { @class = "nav-link" })</li>
                     <li>@Html.ActionLink("Contact Us", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
+                    @if (Request.IsAuthenticated)
+                    {
+                        if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                        {
+                            <li>@Html.ActionLink("Staff Dashboard", "Dashboard", "Staff", new { area = "" }, new { @class = "nav-link" })</li>
+                        }
+                        if (User.IsInRole("Learner"))
+                        {
+                            <li>@Html.ActionLink("My Lessons", "MyLessons", "Learners", new { area = "" }, new { @class = "nav-link" })</li>
+                        }
+
+                    }
                 </ul>
                 @Html.Partial("_LoginPartial")
             </div>

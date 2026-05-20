@@ -187,6 +187,7 @@ namespace SwimmingSchool_Implementation.Models
         public string LessonTime { get; set; }
         public string Venue { get; set; }
         public decimal ClassPrice { get; set; }
+        public List<DateTime> SessionDates { get; set; } = new List<DateTime>();
     }
 
 
