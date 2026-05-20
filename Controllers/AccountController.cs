@@ -540,28 +540,22 @@ namespace SwimmingSchool_Implementation.Controllers
                     LessonId = studentVm.SelectedLessonId
                 });
                 db.SaveChanges();
-                // NEW: GENERATE THE 4 CHILD BOOKING SESSIONS (4 Weeks)
 
-                // Find the date of their very first class
-                DateTime firstClassDate = GetNextOccurrenceOfDay(lesson.DayOfWeek.ToString());
+                // GENERATE THE 4 CHILD BOOKING SESSIONS (4 Weeks)
+                // The very first class is simply the exact date the Manager selected!
+                DateTime firstClassDate = lesson.BlockStartDate;
 
-                // If you have a specific time (e.g., 14:30), you can combine the date and time here:
-                // firstClassDate = firstClassDate.Add(lesson.StartTime);
-
-                // Loop 4 times to create 4 weeks of sessions
+                // Loop 4 times to create the 4-week block
                 for (int i = 0; i < 4; i++)
                 {
                     var session = new BookingSession
                     {
                         BookingId = booking.BookingId,
-                        // Add 7 days for every week (Week 0 = +0 days, Week 1 = +7 days, etc.)
                         SessionDate = firstClassDate.AddDays(i * 7),
                         Status = SessionStatus.Scheduled
                     };
-
                     db.BookingSessions.Add(session);
                 }
-
                 // Save the 4 generated sessions to the database
                 db.SaveChanges();
 

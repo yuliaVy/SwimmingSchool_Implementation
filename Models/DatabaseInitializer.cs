@@ -338,7 +338,8 @@ namespace SwimmingSchool_Implementation.Models
                         AgeGroup = "8-12",
                         VenueId = westEnd.VenueId,
                         LessonType = LessonType.Kids,
-                        UserId = teacher.Id
+                        UserId = teacher.Id,
+                        BlockStartDate = new DateTime(2026, 6, 5)
                     };
 
                     context.Lessons.Add(lesson1);
@@ -366,7 +367,8 @@ namespace SwimmingSchool_Implementation.Models
                     VenueId = southside.VenueId,
                     LessonType = LessonType.Adult,
                     Price = 20.00m,
-                    UserId = teacher.Id
+                    UserId = teacher.Id,
+                    BlockStartDate = new DateTime(2026, 6,7)
                 };
                 context.Lessons.Add(lesson2);
                 //save the changes to the database
