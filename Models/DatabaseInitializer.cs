@@ -323,37 +323,25 @@ namespace SwimmingSchool_Implementation.Models
                 //**********************************
                 //seeding the Lessons table
                 //**********************************
-
-                try
+                var lesson1 = new Lesson()
                 {
-                    var lesson1 = new Lesson()
-                    {
-                        Title = "Beginner Backstroke",
-                        DayOfWeek = DayOfWeek.Tuesday,
-                        StartTime = new TimeSpan(9, 0, 0),
-                        DurationInMinutes = 30,
-                        Capacity = 6,
-                        AvailablePlaces = 2,
-                        Price = 20.00m,
-                        AgeGroup = "8-12",
-                        VenueId = westEnd.VenueId,
-                        LessonType = LessonType.Kids,
-                        UserId = teacher.Id,
-                        BlockStartDate = new DateTime(2026, 6, 5)
-                    };
+                    Title = "Beginner Backstroke",
+                    DayOfWeek = DayOfWeek.Tuesday,
+                    StartTime = new TimeSpan(9, 0, 0),
+                    DurationInMinutes = 30,
+                    Capacity = 6,
+                    AvailablePlaces = 2,
+                    Price = 20.00m,
+                    AgeGroup = "8-12",
+                    VenueId = westEnd.VenueId,
+                    LessonType = LessonType.Kids,
+                    UserId = teacher.Id,
+                    BlockStartDate = new DateTime(2026, 5, 26)
+                };
 
-                    context.Lessons.Add(lesson1);
+                context.Lessons.Add(lesson1);
 
-                    context.SaveChanges();
-
-                    System.Diagnostics.Debug.WriteLine("LESSON SAVED");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-
-                    throw;
-                }
+                context.SaveChanges();
 
                 var lesson2 = new Lesson()
                 {
@@ -368,9 +356,28 @@ namespace SwimmingSchool_Implementation.Models
                     LessonType = LessonType.Adult,
                     Price = 20.00m,
                     UserId = teacher.Id,
-                    BlockStartDate = new DateTime(2026, 6,7)
+                    BlockStartDate = new DateTime(2026, 6, 1)
                 };
                 context.Lessons.Add(lesson2);
+                //save the changes to the database
+                context.SaveChanges();
+
+                var lesson3 = new Lesson()
+                {
+                    Title = "Beginner Breaststroke",
+                    DayOfWeek = DayOfWeek.Tuesday,
+                    StartTime = new TimeSpan(10, 0, 0),
+                    DurationInMinutes = 30,
+                    Capacity = 6,
+                    AvailablePlaces = 2,
+                    Price = 20.00m,
+                    AgeGroup = "8-12",
+                    VenueId = westEnd.VenueId,
+                    LessonType = LessonType.Kids,
+                    UserId = teacher.Id,
+                    BlockStartDate = new DateTime(2026, 5, 26)
+                };
+                context.Lessons.Add(lesson3);
                 //save the changes to the database
                 context.SaveChanges();
 
@@ -409,8 +416,8 @@ namespace SwimmingSchool_Implementation.Models
                     Status = BookingStatus.Completed,
                     IsDepositOnly = true,
                     BookingDate = DateTime.Now,
-                    TotalAmount = lesson2.Price,
-                    AmountPaid = (lesson2.Price * 20) / 100, // 20% deposit
+                    TotalAmount = lesson1.Price,
+                    AmountPaid = (lesson1.Price * 20) / 100, // 20% deposit
                     AdminNotes = "Waiting on final payment.",
                     Student = student2
                 };
@@ -461,7 +468,7 @@ namespace SwimmingSchool_Implementation.Models
                 var lessonBooking3 = new LessonBooking()
                 {
                     Booking = booking2,
-                    Lesson = lesson2
+                    Lesson = lesson1
                 };
                 context.LessonsBookings.Add(lessonBooking3);
 
@@ -474,7 +481,7 @@ namespace SwimmingSchool_Implementation.Models
                 var bookingSession1 = new BookingSession()
                 {
                     BookingId = booking1.BookingId,
-                    SessionDate = new DateTime(2026, 5, 20),
+                    SessionDate = new DateTime(2026, 6, 2),
                     Status = SessionStatus.Scheduled
                 };
                 context.BookingSessions.Add(bookingSession1);
@@ -482,7 +489,7 @@ namespace SwimmingSchool_Implementation.Models
                 var bookingSession2 = new BookingSession()
                 {
                     BookingId = booking1.BookingId,
-                    SessionDate = new DateTime(2025, 5, 22),
+                    SessionDate = new DateTime(2026, 5, 12),
                     Status = SessionStatus.Attended
                 };
                 context.BookingSessions.Add(bookingSession2);
@@ -490,7 +497,7 @@ namespace SwimmingSchool_Implementation.Models
                 var bookingSession3 = new BookingSession()
                 {
                     BookingId = booking1.BookingId,
-                    SessionDate = new DateTime(2025, 5, 29),
+                    SessionDate = new DateTime(2026, 5, 19),
                     Status = SessionStatus.NoShow
                 };
                 context.BookingSessions.Add(bookingSession3);
@@ -498,7 +505,39 @@ namespace SwimmingSchool_Implementation.Models
                 var bookingSession4 = new BookingSession()
                 {
                     BookingId = booking1.BookingId,
-                    SessionDate = new DateTime(2025, 6, 2),
+                    SessionDate = new DateTime(2026, 5, 26),
+                    Status = SessionStatus.CancelledByUser
+                };
+                context.BookingSessions.Add(bookingSession4);
+
+                var bookingSession21 = new BookingSession()
+                {
+                    BookingId = booking2.BookingId,
+                    SessionDate = new DateTime(2026, 6, 2),
+                    Status = SessionStatus.Scheduled
+                };
+                context.BookingSessions.Add(bookingSession1);
+
+                var bookingSession22 = new BookingSession()
+                {
+                    BookingId = booking2.BookingId,
+                    SessionDate = new DateTime(2026, 5, 12),
+                    Status = SessionStatus.Attended
+                };
+                context.BookingSessions.Add(bookingSession2);
+
+                var bookingSession23 = new BookingSession()
+                {
+                    BookingId = booking2.BookingId,
+                    SessionDate = new DateTime(2026, 5, 19),
+                    Status = SessionStatus.NoShow
+                };
+                context.BookingSessions.Add(bookingSession3);
+
+                var bookingSession24 = new BookingSession()
+                {
+                    BookingId = booking2.BookingId,
+                    SessionDate = new DateTime(2026, 5, 26),
                     Status = SessionStatus.CancelledByUser
                 };
                 context.BookingSessions.Add(bookingSession4);

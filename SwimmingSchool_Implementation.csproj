@@ -217,6 +217,7 @@
     <Compile Include="Controllers\LearnersController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ManagerController.cs" />
+    <Compile Include="Controllers\TimetableController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -341,6 +342,7 @@
     <Content Include="Views\Manager\EditTeacher.cshtml" />
     <Content Include="Views\Manager\CreateTeacher.cshtml" />
     <Content Include="Views\Manager\DeleteTeacher.cshtml" />
+    <Content Include="Views\Timetable\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
