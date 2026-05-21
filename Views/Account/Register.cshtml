@@ -11,7 +11,7 @@
             <h1 class="mt-3 text-primary fw-bold">Registration</h1>
         </div>
 
-        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "payment-form" }))
+        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "payment-form", onsubmit = "return validateBookingAge()" }))
         {
             @Html.AntiForgeryToken()
 
@@ -89,7 +89,12 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Date of Birth</label>
-                                @Html.TextBoxFor(m => m.Students[i].BirthDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", @Value = Model.Students[i].BirthDate == default(DateTime) ? "" : Model.Students[i].BirthDate.ToString("yyyy-MM-dd") })
+                                @Html.TextBoxFor(m => m.Students[i].BirthDate, "{0:yyyy-MM-dd}", new
+                                {
+                                    @class = "form-control dob-input-field",
+                                    type = "date",
+                                    @Value = Model.Students[i].BirthDate == default(DateTime) ? "" : Model.Students[i].BirthDate.ToString("yyyy-MM-dd")
+                                })
                             </div>
                         </div>
                         <div class="row g-3 mb-4 mt-2 border-top pt-3">
@@ -121,7 +126,9 @@
                             <label class="form-label small fw-bold text-primary">Selected Class for this Swimmer</label>
                             <div class="d-flex align-items-center gap-3">
                                 @Html.HiddenFor(m => m.Students[i].SelectedLessonId, new { @class = "lesson-id-input" })
-                                <input type="hidden" class="lesson-price-input" value="@Model.Students[i].LessonPrice"/>
+                                <input type="hidden" class="lesson-price-input" value="@Model.Students[i].LessonPrice" />
+                                <input type="hidden" class="lesson-type-input" value="@Model.Students[i].SelectedLessonType" />
+
                                 <input type="text" readonly class="form-control-plaintext fw-bold lesson-title-display" value="@Model.Students[i].SelectedLessonTitle" placeholder="No class selected" />
                                 <button type="button" class="btn btn-warning btn-sm text-nowrap" onclick="openLessonModal(@i)">Choose/Change Class</button>
                             </div>
@@ -226,7 +233,7 @@
                                     data-audience="@lesson.LessonType"
                                     data-lesson-id="@lesson.Id"
                                     data-capacity="@lesson.AvailablePlaces"
-                                    onclick="selectLessonForStudent(@lesson.Id, '@lesson.Title (@lesson.DayOfWeek)', @lesson.Price)">
+                                    onclick="selectLessonForStudent(@lesson.Id, '@lesson.Title (@lesson.DayOfWeek)', @lesson.Price, '@lesson.LessonType')">
 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -236,6 +243,7 @@
                                         </h5>
                                         <div class="text-muted small mt-2">
                                             <span class="fw-bold text-primary">@lesson.DayOfWeek</span> |
+                                            <span class="fw-bold text-dark">@lesson.StartTime.ToString(@"hh\:mm")</span> |
                                             <span>@lesson.LessonType</span> |
                                             <span>£@lesson.Price</span>
                                         </div>
@@ -383,12 +391,16 @@
         }
 
         // Triggered when user clicks a lesson inside the modal
-        function selectLessonForStudent(lessonId, lessonTitle, lessonPrice) {
+        // ADDED: audienceType parameter
+        function selectLessonForStudent(lessonId, lessonTitle, lessonPrice, audienceType) {
             const studentBlock = document.querySelector(`.student-block[data-index="${currentEditingStudentIndex}"]`);
 
             studentBlock.querySelector('.lesson-id-input').value = lessonId;
             studentBlock.querySelector('.lesson-title-display').value = lessonTitle;
             studentBlock.querySelector('.lesson-price-input').value = lessonPrice;
+
+            // ADDED: Save the audience type into this specific student's hidden field
+            studentBlock.querySelector('.lesson-type-input').value = audienceType;
 
             lessonModal.hide();
 
@@ -437,7 +449,7 @@
             chooseBtn.setAttribute('onclick', `openLessonModal(${newIndex})`);
 
             container.appendChild(newBlock);
-            // Recalculate the total 
+            // Recalculate the total
             calculateTotal();
         }
 
@@ -464,6 +476,56 @@
             calculateTotal();
         }
 
+        // ADDED: The complete validation function mapping through all student blocks
+        function validateBookingAge() {
+            const blocks = document.querySelectorAll('.student-block');
+
+            for (let i = 0; i < blocks.length; i++) {
+                const dobElement = blocks[i].querySelector('.dob-input-field');
+                const lessonTypeElement = blocks[i].querySelector('.lesson-type-input');
+
+                // If they haven't filled out a date or selected a class, skip our custom check.
+                // Standard ASP.NET [Required] validation will catch it instead.
+                if (!dobElement || !dobElement.value || !lessonTypeElement || !lessonTypeElement.value) {
+                    continue;
+                }
+
+                const dob = new Date(dobElement.value);
+                const today = new Date();
+
+                // 1. Future Date Check
+                if (dob > today) {
+                    alert(`Swimmer ${i + 1}: Date of birth cannot be in the future.`);
+                    return false;
+                }
+
+                // Calculate accurate age
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDifference = today.getMonth() - dob.getMonth();
+                if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                const lessonType = lessonTypeElement.value.toLowerCase();
+                const isKidsClass = lessonType.includes("kid") || lessonType.includes("child");
+                const isAdultClass = lessonType.includes("adult");
+
+                // 2. Kids Rule Check (Between 3 and 17)
+                if (isKidsClass && (age < 3 || age >= 18)) {
+                    alert(`Swimmer ${i + 1} is ${age} years old. Kids classes require students to be between 3 and 17 years old.`);
+                    return false;
+                }
+
+                // 3. Adults Rule Check (18+)
+                if (isAdultClass && age < 18) {
+                    alert(`Swimmer ${i + 1} is ${age} years old. Adult classes require students to be at least 18 years old.`);
+                    return false;
+                }
+            }
+
+            return true; // Validated successfully
+        }
 
     </script>
+}
 }

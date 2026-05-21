@@ -162,6 +162,7 @@ namespace SwimmingSchool_Implementation.Models
         public string AquaticGoals { get; set; }
 
         public string SwimExperience { get; set; }
+        public string SelectedLessonType { get; set; }
     }
 
     public class BookingSuccessViewModel
