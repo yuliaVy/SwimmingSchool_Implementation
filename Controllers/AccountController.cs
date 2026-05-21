@@ -168,7 +168,8 @@ namespace SwimmingSchool_Implementation.Controllers
             {
                 SelectedLessonId = lessonId,
                 SelectedLessonTitle = selectedLesson != null ? $"{selectedLesson.Title} ({selectedLesson.DayOfWeek})" : "",
-                LessonPrice = selectedLesson?.Price ?? 0
+                LessonPrice = selectedLesson?.Price ?? 0,
+                SelectedLessonType = selectedLesson != null ? selectedLesson.LessonType.ToString() : ""
             }
         }
             };
@@ -176,7 +177,10 @@ namespace SwimmingSchool_Implementation.Controllers
             ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
 
             // Pass ALL available lessons to the view so the Modal can display them
-            ViewBag.AllLessons = db.Lessons.Include(l => l.Venue).Where(l => l.AvailablePlaces > 0).ToList();
+            ViewBag.AllLessons = db.Lessons
+        .Include(l => l.Venue)
+        .Where(l => l.AvailablePlaces > 0 && l.BlockStartDate >= DateTime.Today)
+        .ToList();
 
             //fetch venues from the database and pass them to the view
             ViewBag.Venues = db.Venues.ToList();
