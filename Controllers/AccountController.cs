@@ -163,20 +163,37 @@ namespace SwimmingSchool_Implementation.Controllers
             var model = new RegisterViewModel
             {
                 Students = new List<StudentViewModel>
-        {
-            new StudentViewModel
-            {
-                SelectedLessonId = lessonId,
-                SelectedLessonTitle = selectedLesson != null ? $"{selectedLesson.Title} ({selectedLesson.DayOfWeek})" : "",
-                LessonPrice = selectedLesson?.Price ?? 0
-            }
-        }
+                {
+                    new StudentViewModel
+                    {
+                        SelectedLessonId = lessonId,
+                        SelectedLessonTitle = selectedLesson != null ? $"{selectedLesson.Title} ({selectedLesson.DayOfWeek})" : "",
+                        LessonPrice = selectedLesson?.Price ?? 0,
+                        SelectedLessonType = selectedLesson != null ? selectedLesson.LessonType.ToString() : ""
+                    }
+                }
             };
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = User.Identity.GetUserId();
+                // Adjust "ApplicationUser" below if your identity model is just named "User"
+                var currentUser = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(userId);
+
+                if (currentUser != null)
+                {
+                    model.FirstName = currentUser.FirstName;
+                    model.SecondName = currentUser.SecondName;
+                    model.Email = currentUser.Email;
+                    model.PhoneNumber = currentUser.PhoneNumber;
+                }
+            }
 
             ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
-
             // Pass ALL available lessons to the view so the Modal can display them
-            ViewBag.AllLessons = db.Lessons.Include(l => l.Venue).Where(l => l.AvailablePlaces > 0).ToList();
+            ViewBag.AllLessons = db.Lessons
+            .Include(l => l.Venue)
+            .Where(l => l.AvailablePlaces > 0 && l.BlockStartDate >= DateTime.Today)
+            .ToList();
 
             //fetch venues from the database and pass them to the view
             ViewBag.Venues = db.Venues.ToList();
@@ -189,6 +206,13 @@ namespace SwimmingSchool_Implementation.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
+            // Bypass Password Validation for existing users
+            if (User.Identity.IsAuthenticated)
+            {
+                ModelState.Remove("Password");
+                ModelState.Remove("ConfirmPassword");
+            }
+
             // Re-populate view drop-downs if validation fails
             ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
             ViewBag.AllLessons = db.Lessons.Include(l => l.Venue).Where(l => l.AvailablePlaces > 0).ToList();
@@ -451,16 +475,39 @@ namespace SwimmingSchool_Implementation.Controllers
 
             // =========================================================
             // SAFE TO WRITE TO THE DATABASE
-            var user = new User
-            {
-                UserName = model.Email,
-                Email = model.Email,
-                FirstName = model.FirstName,
-                SecondName = model.SecondName,
-                PhoneNumber = model.PhoneNumber,
-                DateRegistered = DateTime.Now
-            };
+            // =========================================================
 
+            string targetUserId = "";
+
+            // BRANCH A: Existing User
+            if (User.Identity.IsAuthenticated)
+            {
+                targetUserId = User.Identity.GetUserId();
+            }
+            // BRANCH B: Brand New User
+            else
+            {
+                var user = new User
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    SecondName = model.SecondName,
+                    PhoneNumber = model.PhoneNumber,
+                    DateRegistered = DateTime.Now
+                };
+                var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                var result = await userManager.CreateAsync(user, model.Password);
+                //assign the user to the member role
+                if (!result.Succeeded)
+                {
+                    // Log the error or handle account creation failure securely
+                    return RedirectToAction("PaymentFailed");
+                }
+                await UserManager.AddToRoleAsync(user.Id, "Learner");
+                targetUserId = user.Id;
+
+            }
             // Group the students by the lesson they selected to see how many total spots this family needs per class
             var requestedSpotsPerLesson = model.Students
                 .GroupBy(s => s.SelectedLessonId)
@@ -479,18 +526,6 @@ namespace SwimmingSchool_Implementation.Controllers
                     ModelState.AddModelError("", $"We're sorry! Another customer just booked spots in '{dbLesson?.Title}'. There are only {dbLesson?.AvailablePlaces} openings left.");
                     return View(model); // Kick them back to the form with the error message
                 }
-            }
-
-            var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            var result = await userManager.CreateAsync(user, model.Password);
-            //assign the user to the member role
-            await UserManager.AddToRoleAsync(user.Id, "Learner");
-
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                    ModelState.AddModelError("", error);
-                return View(model);
             }
 
 
@@ -522,7 +557,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 // Create Booking
                 var booking = new Booking
                 {
-                    UserId = user.Id,
+                    UserId = targetUserId,
                     StudentId = student.Id,
                     BookingDate = DateTime.Now,
                     TotalAmount = lesson.Price,
