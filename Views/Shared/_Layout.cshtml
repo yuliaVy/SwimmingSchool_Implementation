@@ -23,9 +23,13 @@
                     <li>@Html.ActionLink("Contact Us", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
                     @if (Request.IsAuthenticated)
                     {
-                        if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                        if (User.IsInRole("Teacher"))
                         {
-                            <li>@Html.ActionLink("Staff Dashboard", "Dashboard", "Staff", new { area = "" }, new { @class = "nav-link" })</li>
+                            <li>@Html.ActionLink("Timetable", "Index", "Timetable", new { area = "" }, new { @class = "nav-link" })</li>
+                        }
+                        if (User.IsInRole("Manager"))
+                        {
+                            <li>@Html.ActionLink("Managers Hub", "Index", "Manager", new { area = "" }, new { @class = "nav-link" })</li>
                         }
                         if (User.IsInRole("Learner"))
                         {
