@@ -16,7 +16,7 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
 
-                    @using (Html.BeginForm("EditTeacher", "Manager", FormMethod.Post, new { role = "form" }))
+                    @using (Html.BeginForm("EditTeacher", "Manager", FormMethod.Post, new { enctype = "multipart/form-data", role = "form" }))
                     {
                         @Html.AntiForgeryToken()
 
@@ -24,6 +24,20 @@
 
                         @Html.ValidationSummary(true, "", new { @class = "alert alert-danger shadow-sm p-2 mb-4" })
 
+                        <div class="col-12 mt-3 mb-4 p-3 bg-light rounded border">
+                            <label class="form-label fw-bold small">Profile Picture</label>
+
+                            @if (!string.IsNullOrEmpty(Model.CurrentProfileImage))
+                            {
+                                <div class="mb-2 d-flex align-items-center gap-3">
+                                    <img src="~/Content/Images/@Model.CurrentProfileImage" alt="Current Profile" class="rounded-circle shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" />
+                                    <span class="text-muted small">Current picture</span>
+                                </div>
+                            }
+
+                            <input type="file" name="ProfileImageUpload" class="form-control form-control-sm" accept="image/*" />
+                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Upload a new image to replace the current one. Leave blank to keep existing.</small>
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 @Html.LabelFor(m => m.FirstName, new { @class = "form-label fw-bold small" })

@@ -1,0 +1,107 @@
+﻿@model SwimmingSchool_Implementation.Models.ReportDashboardViewModel
+
+@{
+    ViewBag.Title = "Financial & Booking Reports";
+}
+
+<div class="container py-5">
+
+    <div class="row mb-4 align-items-end">
+        <div class="col-md-5">
+            <h2 class="text-primary fw-bold mb-1">Reports Engine</h2>
+            <p class="text-muted mb-0">Filter and export your school's booking data.</p>
+        </div>
+
+        <div class="col-md-7">
+            @using (Html.BeginForm("Reports", "Manager", FormMethod.Get, new { @class = "row g-2 align-items-end justify-content-md-end" }))
+            {
+                <div class="col-auto">
+                    <label class="form-label small fw-bold text-muted mb-1">Start Date</label>
+                    <input type="date" name="startDate" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small fw-bold text-muted mb-1">End Date</label>
+                    <input type="date" name="endDate" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary fw-bold">Update Filter</button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase small fw-bold mb-1 opacity-75">Filtered Bookings</h6>
+                        <h2 class="fw-bold mb-0">@Model.TotalBookings</h2>
+                    </div>
+                    <i class="bi bi-receipt fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm bg-success text-white h-100">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase small fw-bold mb-1 opacity-75">Revenue Collected (In timeframe)</h6>
+                        <h2 class="fw-bold mb-0">£@Model.TotalRevenue.ToString("0.00")</h2>
+                    </div>
+                    <i class="bi bi-cash-stack fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded border mb-4">
+        <span class="fw-bold text-dark">
+            <i class="bi bi-table text-primary me-2"></i> Data Preview
+        </span>
+
+        <a href="@Url.Action("ExportBookingsCsv", "Manager", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd") })"
+           class="btn btn-dark fw-bold shadow-sm">
+            <i class="bi bi-file-earmark-spreadsheet-fill text-success me-1"></i> Export to Excel (CSV)
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 500px;">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light position-sticky top-0 shadow-sm">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Account Holder</th>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.PreviewData.Any())
+                        {
+                            <tr><td colspan="6" class="text-center py-5 text-muted">No bookings found in this timeframe.</td></tr>
+                        }
+                        @foreach (var row in Model.PreviewData)
+                        {
+                            <tr>
+                                <td class="ps-4 text-muted small">@row.BookingDate</td>
+                                <td>
+                                    <div class="fw-bold">@row.AccountHolder</div>
+                                    <div class="text-muted small">@row.AccountEmail</div>
+                                </td>
+                                <td>@row.StudentName</td>
+                                <td><span class="badge bg-secondary">@row.ClassDetails</span></td>
+                                <td>@row.PaymentStatus</td>
+                                <td class="text-end pe-4 fw-bold text-success">£@row.AmountPaid.ToString("0.00")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
