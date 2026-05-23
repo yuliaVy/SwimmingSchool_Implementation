@@ -367,10 +367,10 @@
                                         <p>@lesson.DurationInMinutes mins</p>
                                         <p><strong>Openings:</strong> @lesson.AvailablePlaces</p>
 
-                                        <button class="register-btn"
-                                                onclick="location.href='@Url.Action("Register", "Account", new { lessonId = lesson.Id })'">
-                                            REGISTER
-                                        </button>
+                                        @if (!User.Identity.IsAuthenticated || (!User.IsInRole("Manager") && !User.IsInRole("Teacher")))
+                                        {
+                                            <a href="@Url.Action("Register", "Account", new { lessonId = lesson.Id })" class="register-btn">Book Now</a>
+                                        }
 
                                     </div>
                                 }

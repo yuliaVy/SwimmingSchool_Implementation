@@ -343,6 +343,18 @@
     <Content Include="Views\Manager\CreateTeacher.cshtml" />
     <Content Include="Views\Manager\DeleteTeacher.cshtml" />
     <Content Include="Views\Timetable\Index.cshtml" />
+    <Content Include="Views\Manager\Lessons.cshtml" />
+    <Content Include="Views\Manager\CreateLesson.cshtml" />
+    <Content Include="Views\Manager\EditLesson.cshtml" />
+    <Content Include="Views\Manager\Reports.cshtml" />
+    <Content Include="Views\Manager\AccountHolders.cshtml" />
+    <Content Include="Views\Manager\Students.cshtml" />
+    <Content Include="Views\Manager\Venues.cshtml" />
+    <Content Include="Views\Manager\CreateVenue.cshtml" />
+    <Content Include="Views\Manager\EditVenue.cshtml" />
+    <Content Include="Views\Manager\Policies.cshtml" />
+    <Content Include="Views\Manager\CreatePolicy.cshtml" />
+    <Content Include="Views\Manager\EditPolicy.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

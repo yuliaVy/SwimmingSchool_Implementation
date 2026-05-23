@@ -52,6 +52,8 @@ namespace SwimmingSchool_Implementation.Models
 
         [Display(Name = "Profile Picture")]
         public HttpPostedFileBase ProfileImageUpload { get; set; }
+        public int[] SelectedVenueIds { get; set; }
+        public List<VenueCheckboxItem> AvailableVenues { get; set; } = new List<VenueCheckboxItem>();
     }
 
     // Used for Editing an existing Teacher
@@ -79,6 +81,8 @@ namespace SwimmingSchool_Implementation.Models
 
         // NEW: Used to "catch" the checked boxes when the form is submitted
         public int[] SelectedVenueIds { get; set; }
+        public HttpPostedFileBase ProfileImageUpload { get; set; }
+        public string CurrentProfileImage { get; set; }
     }
 
     public class TimetableIndexViewModel
@@ -122,5 +126,89 @@ namespace SwimmingSchool_Implementation.Models
         public string ParentName { get; set; }
         public string ParentEmail { get; set; }
         public string ParentPhone { get; set; }
+    }
+
+    public class LessonManagementViewModel
+    {   
+        public List<Lesson> ActiveLessons { get; set; } = new List<Lesson>();
+        public List<Lesson> PastLessons { get; set; } = new List<Lesson>();
+    }
+    public class ReportDashboardViewModel
+    {
+        [DataType(DataType.Date)]
+        public DateTime StartDate { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime EndDate { get; set; }
+
+        public int TotalBookings { get; set; }
+        public decimal TotalRevenue { get; set; }
+
+        public List<ReportRowViewModel> PreviewData { get; set; } = new List<ReportRowViewModel>();
+    }
+
+    public class ReportRowViewModel
+    {
+        public int BookingId { get; set; }
+        public string BookingDate { get; set; }
+        public string AccountHolder { get; set; }
+        public string AccountEmail { get; set; }
+        public string StudentName { get; set; }
+        public string ClassDetails { get; set; }
+        public string PaymentStatus { get; set; }
+        public decimal AmountPaid { get; set; }
+        public decimal TotalAmount { get; set; }
+    }
+    public class AccountHolderDirectoryViewModel
+    {
+        public string UserId { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string RegisteredDate { get; set; }
+
+        public int TotalBookings { get; set; }
+        public decimal TotalSpent { get; set; }
+
+        public List<AccountHolderBookingViewModel> Bookings { get; set; } = new List<AccountHolderBookingViewModel>();
+    }
+
+    public class AccountHolderBookingViewModel
+    {
+        public int BookingId { get; set; }
+        public string BookingDate { get; set; }
+        public string StudentName { get; set; }
+        public string ClassName { get; set; }
+        public decimal AmountPaid { get; set; }
+        public string Status { get; set; }
+    }
+    public class StudentDirectoryViewModel
+    {
+        public int StudentId { get; set; }
+        public string FullName { get; set; }
+        public int Age { get; set; }
+        public string Gender { get; set; }
+
+        // Medical Info
+        public string MedicalConditions { get; set; }
+        public string Allergies { get; set; }
+        public string Medications { get; set; }
+        public bool HasMedicalFlag { get; set; }
+
+        // Linked Account Holder (Parent)
+        public string ParentName { get; set; }
+        public string ParentEmail { get; set; }
+        public string ParentPhone { get; set; }
+
+        // Classes
+        public List<StudentEnrolledClassViewModel> EnrolledClasses { get; set; } = new List<StudentEnrolledClassViewModel>();
+    }
+
+    public class StudentEnrolledClassViewModel
+    {
+        public string ClassName { get; set; }
+        public string Schedule { get; set; }
+        public string VenueName { get; set; }
+        public string BookingStatus { get; set; }
     }
 }

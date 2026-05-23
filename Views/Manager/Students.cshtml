@@ -1,0 +1,146 @@
+﻿@model IEnumerable<SwimmingSchool_Implementation.Models.StudentDirectoryViewModel>
+
+@{
+    ViewBag.Title = "Registered Learners Directory";
+}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary fw-bold mb-1">Registered Learners</h2>
+            <p class="text-muted mb-0">Directory of all active swimming students and medical records.</p>
+        </div>
+        <div class="bg-light border rounded px-4 py-2 text-center shadow-sm">
+            <h6 class="text-muted text-uppercase small fw-bold mb-0">Total Swimmers</h6>
+            <h4 class="text-primary fw-bold mb-0">@Model.Count()</h4>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-secondary text-center py-5 shadow-sm">
+            <h5 class="fw-bold text-muted mb-1">No Students Found</h5>
+            <p class="mb-0 text-muted">There are currently no registered learners in the database.</p>
+        </div>
+    }
+    else
+    {
+        <div class="accordion shadow-sm" id="studentsAccordion">
+            @{ int index = 0; }
+            @foreach (var student in Model)
+            {
+                var headerId = "heading" + index;
+                var collapseId = "collapse" + index;
+
+                <div class="accordion-item border-0 border-bottom">
+                    <h2 class="accordion-header" id="@headerId">
+                        <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+
+                            <div class="row w-100 align-items-center">
+                                <div class="col-md-5">
+                                    <div class="fw-bold text-dark fs-5 mb-1">
+                                        <i class="bi bi-person-badge text-primary me-2"></i>@student.FullName
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark border me-2">Age: @student.Age</span>
+                                    <span class="badge bg-light text-dark border">@student.Gender</span>
+                                </div>
+
+                                <div class="col-md-3 text-md-end mt-2 mt-md-0">
+                                    @if (student.HasMedicalFlag)
+                                    {
+                                        <span class="badge bg-danger px-3 py-2"><i class="bi bi-heart-pulse-fill me-1"></i> Medical Alert</span>
+                                    }
+                                </div>
+                            </div>
+
+                        </button>
+                    </h2>
+
+                    <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headerId" data-bs-parent="#studentsAccordion">
+                        <div class="accordion-body bg-light p-4">
+
+                            <div class="row g-4">
+                                <div class="col-lg-5 border-end pe-lg-4">
+
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Linked Account Holder</h6>
+                                    <div class="bg-white p-3 rounded border mb-4">
+                                        <div class="fw-bold text-dark">@student.ParentName</div>
+                                        <div class="text-muted small mt-1"><i class="bi bi-envelope me-1"></i> <a href="mailto:@student.ParentEmail" class="text-decoration-none">@student.ParentEmail</a></div>
+                                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-1"></i> @student.ParentPhone</div>
+                                    </div>
+
+                                    <h6 class="fw-bold text-danger border-bottom border-danger pb-2 mb-3"><i class="bi bi-shield-fill-exclamation me-1"></i> Health & Safety Notes</h6>
+                                    <div class="bg-white p-3 rounded border">
+                                        <div class="mb-2">
+                                            <small class="text-muted text-uppercase fw-bold d-block">Medical Conditions</small>
+                                            <div class="@(string.IsNullOrWhiteSpace(student.MedicalConditions) ? "text-muted" : "text-danger fw-bold")">
+                                                @(string.IsNullOrWhiteSpace(student.MedicalConditions) ? "None reported" : student.MedicalConditions)
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted text-uppercase fw-bold d-block">Allergies</small>
+                                            <div class="@(string.IsNullOrWhiteSpace(student.Allergies) ? "text-muted" : "text-danger fw-bold")">
+                                                @(string.IsNullOrWhiteSpace(student.Allergies) ? "None reported" : student.Allergies)
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted text-uppercase fw-bold d-block">Medications</small>
+                                            <div class="text-dark">@(string.IsNullOrWhiteSpace(student.Medications) ? "None reported" : student.Medications)</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-lg-7 ps-lg-4">
+                                    <h6 class="fw-bold text-success border-bottom border-success pb-2 mb-3">Enrolled Classes</h6>
+
+                                    @if (!student.EnrolledClasses.Any())
+                                    {
+                                        <div class="text-muted small italic">No active class enrollments found.</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="table-responsive bg-white rounded border">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-3">Class</th>
+                                                        <th>Schedule & Venue</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var lesson in student.EnrolledClasses)
+                                                    {
+                                                        <tr>
+                                                            <td class="ps-3 fw-bold text-dark">@lesson.ClassName</td>
+                                                            <td>
+                                                                <div class="text-dark small">@lesson.Schedule</div>
+                                                                <div class="text-muted" style="font-size: 0.75rem;">@lesson.VenueName</div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge border text-dark @(lesson.BookingStatus.Contains("Complete") ? "border-success bg-success-subtle" : "border-secondary bg-light")">
+                                                                    @lesson.BookingStatus
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                index++;
+            }
+        </div>
+    }
+</div>

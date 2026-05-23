@@ -1,0 +1,79 @@
+﻿@model IEnumerable<SwimmingSchool_Implementation.Models.Venue>
+
+@{
+    ViewBag.Title = "Manage Venues";
+}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="text-primary fw-bold mb-0">Venues & Locations</h2>
+            <p class="text-muted small mb-0">Manage swimming pool facilities and addresses.</p>
+        </div>
+        <a href="@Url.Action("CreateVenue", "Manager")" class="btn btn-primary fw-bold shadow-sm">
+            <i class="bi bi-plus-lg"></i> Add New Venue
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success shadow-sm">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger shadow-sm">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-secondary text-center py-5">No venues have been added yet.</div>
+            </div>
+        }
+
+        @foreach (var venue in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm overflow-hidden">
+
+                    @if (!string.IsNullOrEmpty(venue.ImageName))
+                    {
+                        <img src="~/Content/Images/@venue.ImageName" class="card-img-top" alt="@venue.Name" style="height: 200px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div class="bg-secondary d-flex justify-content-center align-items-center text-white" style="height: 200px;">
+                            <i class="bi bi-image fs-1 opacity-50"></i>
+                        </div>
+                    }
+
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-1">@venue.Name</h5>
+                        <p class="text-muted small mb-3"><i class="bi bi-geo-alt text-danger me-1"></i> @venue.Address</p>
+
+                        <div class="mb-2">
+                            <small class="fw-bold text-uppercase text-muted d-block" style="font-size: 0.7rem;">Pool Info</small>
+                            <span class="text-dark small">@(string.IsNullOrWhiteSpace(venue.PoolInfo) ? "Not specified" : venue.PoolInfo)</span>
+                        </div>
+                        <div class="mb-3">
+                            <small class="fw-bold text-uppercase text-muted d-block" style="font-size: 0.7rem;">Amenities</small>
+                            <span class="text-dark small">@(string.IsNullOrWhiteSpace(venue.Amenities) ? "Not specified" : venue.Amenities)</span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white border-top p-3 d-flex justify-content-between align-items-center">
+                        <a href="@Url.Action("EditVenue", new { id = venue.VenueId })" class="btn btn-sm btn-outline-primary px-3">Edit</a>
+
+                        @using (Html.BeginForm("DeleteVenue", "Manager", new { id = venue.VenueId }, FormMethod.Post, new { onsubmit = "return confirm('Are you sure you want to permanently delete this venue?');" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-3">Delete</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
