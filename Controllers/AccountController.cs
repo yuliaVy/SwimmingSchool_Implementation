@@ -158,6 +158,12 @@ namespace SwimmingSchool_Implementation.Controllers
         [AllowAnonymous]
         public ActionResult Register(int lessonId)
         {
+            // SECURITY BLOCK: Prevent Staff from Booking
+            if (User.Identity.IsAuthenticated && (User.IsInRole("Manager") || User.IsInRole("Teacher")))
+            {
+                TempData["ErrorMessage"] = "Staff members are not permitted to book classes. Please log out and use a Parent/Learner account to make a booking.";
+                return RedirectToAction("Index", "Home"); // Redirect them back to the homepage
+            }
             var selectedLesson = db.Lessons.FirstOrDefault(p => p.Id == lessonId);
 
             var model = new RegisterViewModel
@@ -187,7 +193,7 @@ namespace SwimmingSchool_Implementation.Controllers
                     model.PhoneNumber = currentUser.PhoneNumber;
                 }
             }
-
+            // Pass actual list of required policies
             ViewBag.Policies = db.Policies.Where(p => p.IsRequired).ToList();
             // Pass ALL available lessons to the view so the Modal can display them
             ViewBag.AllLessons = db.Lessons
@@ -206,6 +212,13 @@ namespace SwimmingSchool_Implementation.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
+            // SECURITY BLOCK: Prevent Staff from Booking
+            if (User.Identity.IsAuthenticated && (User.IsInRole("Manager") || User.IsInRole("Teacher")))
+            {
+                TempData["ErrorMessage"] = "Staff members are not permitted to book classes.";
+                return RedirectToAction("Index", "Home");
+            }
+
             // Bypass Password Validation for existing users
             if (User.Identity.IsAuthenticated)
             {

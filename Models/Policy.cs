@@ -19,6 +19,7 @@ namespace SwimmingSchool_Implementation.Models
         [Required]
         public string Description { get; set; }
 
+        [Required]
         public bool IsRequired { get; set; }
 
         public virtual ICollection<PolicyAgreement> PolicyAgreements { get; set; }
