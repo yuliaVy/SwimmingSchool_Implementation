@@ -143,9 +143,27 @@
                             {
                                 foreach (var policy in ViewBag.Policies)
                                 {
-                                    <div class="form-check mt-2">
-                                        <input type="checkbox" name="Students[@i].AcceptedPolicies" value="@policy.Id" class="form-check-input" required />
-                                        <label class="form-check-label small text-muted">I agree to the @policy.Title</label>
+                                    var uniqueCheckboxId = $"policy_{i}_{policy.Id}";
+                                    var uniqueCollapseId = $"desc_{i}_{policy.Id}";
+
+                                    <div class="form-check mt-3 border-bottom pb-3">
+                                        <input type="checkbox" name="Students[@i].AcceptedPolicies" value="@policy.Id" class="form-check-input mt-1" id="@uniqueCheckboxId" required />
+
+                                        <label class="form-check-label w-100" for="@uniqueCheckboxId">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="small text-dark">I agree to the <strong>@policy.Title</strong></span>
+
+                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 ms-2" data-bs-toggle="collapse" data-bs-target="#@uniqueCollapseId" aria-expanded="false">
+                                                    Read Policy
+                                                </button>
+                                            </div>
+                                        </label>
+
+                                        <div class="collapse mt-2" id="@uniqueCollapseId">
+                                            <div class="card card-body bg-light border-0 small text-muted p-3 mb-1" style="font-size: 0.8rem; max-height: 150px; overflow-y: auto;">
+                                                @policy.Description
+                                            </div>
+                                        </div>
                                     </div>
                                 }
                             }

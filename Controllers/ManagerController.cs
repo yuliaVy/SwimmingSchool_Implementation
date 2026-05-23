@@ -359,6 +359,43 @@ namespace SwimmingSchool_Implementation.Controllers
 
             return RedirectToAction("Teachers");
         }
+        // POST: /Manager/PromoteToManager
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> PromoteToManager(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            var user = await UserManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                // Check if they already have the Manager role to prevent duplicate assignments
+                if (await UserManager.IsInRoleAsync(user.Id, "Manager"))
+                {
+                    TempData["ErrorMessage"] = $"{user.FirstName} is already a Manager.";
+                    return RedirectToAction("Teachers");
+                }
+
+                // Add the Manager role
+                var result = await UserManager.AddToRoleAsync(user.Id, "Manager");
+
+                if (result.Succeeded)
+                {
+                    // Note: They retain their "Teacher" role so they can still be assigned to teach classes!
+                    TempData["SuccessMessage"] = $"{user.FirstName} {user.SecondName} has been successfully promoted to Manager and now has full dashboard access.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "A database error occurred while trying to promote this user.";
+                }
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "User not found.";
+            }
+
+            return RedirectToAction("Teachers");
+        }
 
         // Helper method for Identity Errors
         private void AddErrors(IdentityResult result)
@@ -418,7 +455,6 @@ namespace SwimmingSchool_Implementation.Controllers
             return View(model);
         }
 
-        // GET: /Manager/AccountHolders
         // ==========================================
         // DIRECTORY MANAGEMENT
         // ==========================================
@@ -459,7 +495,10 @@ namespace SwimmingSchool_Implementation.Controllers
             return View(model);
         }
 
-        // 3. BOOKINGS & TIMETABLE
+        //=========================
+        // BOOKINGS & TIMETABLE
+        //=========================
+
         // GET: /Manager/Bookings
         public ActionResult Bookings()
         {
@@ -796,6 +835,204 @@ namespace SwimmingSchool_Implementation.Controllers
             {
                 ViewBag.UserId = new SelectList(new List<SelectListItem>());
             }
+        }
+
+        // ==========================================
+        // VENUE MANAGEMENT
+        // ==========================================
+
+        // GET: /Manager/Venues
+        public ActionResult Venues()
+        {
+            // Eager-load lessons so we know if the venue is currently in use
+            var venues = db.Venues.Include(v => v.Lessons).ToList();
+            return View(venues);
+        }
+
+        // GET: /Manager/CreateVenue
+        public ActionResult CreateVenue()
+        {
+            return View(new Venue());
+        }
+
+        // POST: /Manager/CreateVenue
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateVenue(Venue venue, HttpPostedFileBase ImageUpload)
+        {
+            if (ModelState.IsValid)
+            {
+                // Handle the Image Upload
+                if (ImageUpload != null && ImageUpload.ContentLength > 0)
+                {
+                    var physicalPath = Server.MapPath("~/Content/Images/");
+                    if (!Directory.Exists(physicalPath)) Directory.CreateDirectory(physicalPath);
+
+                    var fileName = Path.GetFileName(ImageUpload.FileName);
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                    var fullImagePath = Path.Combine(physicalPath, uniqueFileName);
+
+                    ImageUpload.SaveAs(fullImagePath);
+                    venue.ImageName = uniqueFileName;
+                }
+
+                db.Venues.Add(venue);
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "Venue created successfully.";
+                return RedirectToAction("Venues");
+            }
+            return View(venue);
+        }
+
+        // GET: /Manager/EditVenue/5
+        public ActionResult EditVenue(int? id)
+        {
+            if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            Venue venue = db.Venues.Find(id);
+            if (venue == null) return HttpNotFound();
+
+            return View(venue);
+        }
+
+        // POST: /Manager/EditVenue/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditVenue(Venue venue, HttpPostedFileBase ImageUpload)
+        {
+            if (ModelState.IsValid)
+            {
+                // Handle the Image Upload (Replacing the old one)
+                if (ImageUpload != null && ImageUpload.ContentLength > 0)
+                {
+                    var physicalPath = Server.MapPath("~/Content/Images/");
+                    if (!Directory.Exists(physicalPath)) Directory.CreateDirectory(physicalPath);
+
+                    var fileName = Path.GetFileName(ImageUpload.FileName);
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                    var fullImagePath = Path.Combine(physicalPath, uniqueFileName);
+
+                    ImageUpload.SaveAs(fullImagePath);
+                    venue.ImageName = uniqueFileName; // Update with new image
+                }
+
+                db.Entry(venue).State = EntityState.Modified;
+
+                // If they didn't upload a new image, Entity Framework might try to overwrite the ImageName with null.
+                // This tells EF to ignore the ImageName column during the update IF they didn't upload a new file.
+                if (ImageUpload == null)
+                {
+                    db.Entry(venue).Property(m => m.ImageName).IsModified = false;
+                }
+
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "Venue updated successfully.";
+                return RedirectToAction("Venues");
+            }
+            return View(venue);
+        }
+
+        // POST: /Manager/DeleteVenue/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteVenue(int id)
+        {
+            Venue venue = db.Venues.Include(v => v.Lessons).FirstOrDefault(v => v.VenueId == id);
+
+            if (venue != null)
+            {
+                // SAFETY CHECK: Prevent deleting a venue if classes are scheduled there
+                if (venue.Lessons != null && venue.Lessons.Any())
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete '{venue.Name}' because there are {venue.Lessons.Count} class(es) scheduled at this location. Please reassign or delete the classes first.";
+                    return RedirectToAction("Venues");
+                }
+
+                db.Venues.Remove(venue);
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "Venue deleted successfully.";
+            }
+            return RedirectToAction("Venues");
+        }
+        // ==========================================
+        // POLICY MANAGEMENT
+        // ==========================================
+
+        // GET: /Manager/Policies
+        public ActionResult Policies()
+        {
+            var policies = db.Policies.ToList();
+            return View(policies);
+        }
+
+        // GET: /Manager/CreatePolicy
+        public ActionResult CreatePolicy()
+        {
+            // Default new policies to be required
+            return View(new Policy { IsRequired = true });
+        }
+
+        // POST: /Manager/CreatePolicy
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreatePolicy(Policy policy)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Policies.Add(policy);
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "New policy created successfully.";
+                return RedirectToAction("Policies");
+            }
+            return View(policy);
+        }
+
+        // GET: /Manager/EditPolicy/5
+        public ActionResult EditPolicy(int? id)
+        {
+            if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            Policy policy = db.Policies.Find(id);
+            if (policy == null) return HttpNotFound();
+
+            return View(policy);
+        }
+
+        // POST: /Manager/EditPolicy/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditPolicy(Policy policy)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Entry(policy).State = EntityState.Modified;
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "Policy updated successfully.";
+                return RedirectToAction("Policies");
+            }
+            return View(policy);
+        }
+
+        // POST: /Manager/DeletePolicy/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeletePolicy(int id)
+        {
+            Policy policy = db.Policies.Find(id);
+            if (policy != null)
+            {
+                try
+                {
+                    db.Policies.Remove(policy);
+                    db.SaveChanges();
+                    TempData["SuccessMessage"] = "Policy deleted successfully.";
+                }
+                catch (Exception)
+                {
+                    // If parents have already agreed to this policy, deleting it breaks the database relationships.
+                    TempData["ErrorMessage"] = "Cannot delete this policy because parents have already signed it. Instead, edit the policy and uncheck 'Required' to hide it from future bookings.";
+                }
+            }
+            return RedirectToAction("Policies");
         }
     }
 
