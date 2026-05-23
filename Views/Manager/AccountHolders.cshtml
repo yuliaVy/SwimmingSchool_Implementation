@@ -1,0 +1,102 @@
+﻿@model IEnumerable<SwimmingSchool_Implementation.Models.AccountHolderDirectoryViewModel>
+
+@{
+    ViewBag.Title = "Account Holders Directory";
+}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary fw-bold mb-1">Account Holders</h2>
+            <p class="text-muted mb-0">Directory of all registered parents/guardians and their attached swimmers.</p>
+        </div>
+        <div class="bg-light border rounded px-4 py-2 text-center shadow-sm">
+            <h6 class="text-muted text-uppercase small fw-bold mb-0">Total Accounts</h6>
+            <h4 class="text-primary fw-bold mb-0">@Model.Count()</h4>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-secondary text-center py-5 shadow-sm">
+            <h5 class="fw-bold text-muted mb-1">No Accounts Found</h5>
+            <p class="mb-0 text-muted">There are currently no registered account holders with bookings.</p>
+        </div>
+    }
+    else
+    {
+        <div class="accordion shadow-sm" id="parentsAccordion">
+            @{ int index = 0; }
+            @foreach (var parent in Model)
+            {
+                var headerId = "heading" + index;
+                var collapseId = "collapse" + index;
+
+                <div class="accordion-item border-0 border-bottom">
+                    <h2 class="accordion-header" id="@headerId">
+                        <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+
+                            <div class="row w-100 align-items-center">
+                                <div class="col-md-4">
+                                    <div class="fw-bold text-dark fs-5 mb-1">
+                                        <i class="bi bi-person-circle text-secondary me-2"></i>@parent.FullName
+                                    </div>
+                                    <div class="text-muted small">Registered: @parent.RegisteredDate</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="text-dark small"><i class="bi bi-envelope me-1"></i> <a href="mailto:@parent.Email" class="text-decoration-none">@parent.Email</a></div>
+                                    <div class="text-dark small"><i class="bi bi-telephone me-1"></i> @parent.Phone</div>
+                                </div>
+
+                                <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                    <span class="badge bg-light text-dark border me-2">@parent.TotalBookings Bookings</span>
+                                    <span class="badge bg-success">£@parent.TotalSpent.ToString("0.00") Spent</span>
+                                </div>
+                            </div>
+
+                        </button>
+                    </h2>
+
+                    <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headerId" data-bs-parent="#parentsAccordion">
+                        <div class="accordion-body bg-light p-0">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th class="ps-4">Booking Date</th>
+                                            <th>Swimmer Name</th>
+                                            <th>Enrolled Class</th>
+                                            <th>Status</th>
+                                            <th class="text-end pe-4">Amount Paid</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in parent.Bookings)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 text-muted small">@booking.BookingDate</td>
+                                                <td class="fw-bold text-dark">@booking.StudentName</td>
+                                                <td><span class="badge bg-primary">@booking.ClassName</span></td>
+                                                <td>
+                                                    <span class="badge border text-dark @(booking.Status.Contains("Complete") ? "border-success bg-success-subtle" : "border-secondary bg-light")">
+                                                        @booking.Status
+                                                    </span>
+                                                </td>
+                                                <td class="text-end pe-4 fw-bold text-success">£@booking.AmountPaid.ToString("0.00")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                index++;
+            }
+        </div>
+    }
+</div>
