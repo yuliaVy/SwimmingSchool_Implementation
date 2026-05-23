@@ -23,15 +23,15 @@
 
     <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Operations & Scheduling</h5>
     <div class="row g-4 mb-5">
-        
+
         <div class="col-md-6 col-lg-4">
             <a href="@Url.Action("Index", "Timetable")" class="text-decoration-none">
                 <div class="card h-100 border-0 shadow-sm custom-hover-card">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-primary text-white rounded p-3 me-3 flex-shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-calendar-week" viewBox="0 0 16 16">
-                                <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
-                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z" />
+                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
                             </svg>
                         </div>
                         <div>
@@ -42,15 +42,33 @@
                 </div>
             </a>
         </div>
-
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Lessons", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-danger text-white rounded p-3 me-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-journal-bookmark-fill" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M6 1h6v7a.5.5 0 0 1-.757.429L9 7.083 6.757 8.43A.5.5 0 0 1 6 8V1z" />
+                                <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2z" />
+                                <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Class Management</h5>
+                            <p class="text-muted small mb-0">Create, edit, and schedule swimming lessons.</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
         <div class="col-md-6 col-lg-4">
             <a href="@Url.Action("Bookings", "Manager")" class="text-decoration-none">
                 <div class="card h-100 border-0 shadow-sm custom-hover-card">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-success text-white rounded p-3 me-3 flex-shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16">
-                                <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27zM0 2v12c0 .27.107.52.293.707l.5 1a1.5 1.5 0 0 0 1.414.394l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414-.394l.5-1A1.5 1.5 0 0 0 16 14V2a1.5 1.5 0 0 0-.293-.707l-.5-1a1.5 1.5 0 0 0-1.414-.394l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414.394l-.5 1A1.5 1.5 0 0 0 0 2z"/>
-                                <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/>
+                                <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27zM0 2v12c0 .27.107.52.293.707l.5 1a1.5 1.5 0 0 0 1.414.394l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414 0l.5-.25.5.25a1.5 1.5 0 0 0 1.414-.394l.5-1A1.5 1.5 0 0 0 16 14V2a1.5 1.5 0 0 0-.293-.707l-.5-1a1.5 1.5 0 0 0-1.414-.394l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414 0l-.5.25-.5-.25a1.5 1.5 0 0 0-1.414.394l-.5 1A1.5 1.5 0 0 0 0 2z" />
+                                <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z" />
                             </svg>
                         </div>
                         <div>
@@ -68,7 +86,7 @@
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-info text-white rounded p-3 me-3 flex-shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-bar-chart-line" viewBox="0 0 16 16">
-                                <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-5 0v-3H2v3h2z"/>
+                                <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-5 0v-3H2v3h2z" />
                             </svg>
                         </div>
                         <div>
@@ -83,7 +101,7 @@
 
     <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Directory Management</h5>
     <div class="row g-4">
-        
+
         <div class="col-md-6 col-lg-4">
             <a href="@Url.Action("Teachers", "Manager")" class="text-decoration-none">
                 <div class="card h-100 border-0 shadow-sm custom-hover-card">
@@ -112,6 +130,27 @@
                     <div class="card-body p-4">
                         <h6 class="fw-bold text-dark mb-2">Account Holders (Parents)</h6>
                         <p class="text-muted small mb-0">Access billing contacts and user account details.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Venues", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2">Venues & Locations</h6>
+                        <p class="text-muted small mb-0">Manage swimming pool locations, addresses, and facilities.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="@Url.Action("Policies", "Manager")" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm custom-hover-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2">School Policies</h6>
+                        <p class="text-muted small mb-0">Manage terms, conditions, and required waivers for bookings.</p>
                     </div>
                 </div>
             </a>

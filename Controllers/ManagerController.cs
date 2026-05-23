@@ -73,7 +73,15 @@ namespace SwimmingSchool_Implementation.Controllers
         // GET: /Manager/CreateTeacher
         public ActionResult CreateTeacher()
         {
-            return View(new CreateTeacherViewModel());
+            var model = new CreateTeacherViewModel
+            {
+                AvailableVenues = db.Venues.Select(v => new VenueCheckboxItem
+                {
+                    VenueId = v.VenueId,
+                    VenueName = v.Name
+                }).ToList()
+            };
+            return View(model);
         }
 
         // POST: /Manager/CreateTeacher
@@ -98,7 +106,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 // ==========================================
                 if (model.ProfileImageUpload != null && model.ProfileImageUpload.ContentLength > 0)
                 {
-                    var uploadDir = "~/Content/Images/Teachers/";
+                    var uploadDir = "~/Content/Images/";
                     var physicalPath = Server.MapPath(uploadDir);
 
                     if (!Directory.Exists(physicalPath))
@@ -122,6 +130,20 @@ namespace SwimmingSchool_Implementation.Controllers
                 if (result.Succeeded)
                 {
                     await UserManager.AddToRoleAsync(user.Id, "Teacher");
+
+                    // Saving the selected venues
+                    if (model.SelectedVenueIds != null && model.SelectedVenueIds.Length > 0)
+                    {
+                        foreach (var venueId in model.SelectedVenueIds)
+                        {
+                            db.TeacherVenues.Add(new TeacherVenue
+                            {
+                                TeacherId = user.Id,
+                                VenueId = venueId
+                            });
+                        }
+                        db.SaveChanges();
+                    }
 
                     // ==========================================
                     // 3. SEND AUTOMATED WELCOME EMAIL
@@ -202,6 +224,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 PhoneNumber = user.PhoneNumber,
                 TeacherPreference = user.TeacherPreference,
                 Bio = user.Bio,
+                CurrentProfileImage = user.ProfileImage,
                 // 3. Build the Checkbox list
                 AvailableVenues = allVenues.Select(v => new VenueCheckboxItem
                 {
@@ -230,13 +253,30 @@ namespace SwimmingSchool_Implementation.Controllers
                 user.TeacherPreference = model.TeacherPreference;
                 user.Bio = model.Bio;
 
+                // Handle Profile Picture Upload on Edit
+                if (model.ProfileImageUpload != null && model.ProfileImageUpload.ContentLength > 0)
+                {
+                    var uploadDir = "~/Content/Images/";
+                    var physicalPath = Server.MapPath(uploadDir);
+
+                    if (!Directory.Exists(physicalPath))
+                    {
+                        Directory.CreateDirectory(physicalPath);
+                    }
+
+                    var fileName = Path.GetFileName(model.ProfileImageUpload.FileName);
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + fileName;
+                    var fullImagePath = Path.Combine(physicalPath, uniqueFileName);
+
+                    model.ProfileImageUpload.SaveAs(fullImagePath);
+                    user.ProfileImage = uniqueFileName;
+                }
+
                 var result = await UserManager.UpdateAsync(user);
 
                 if (result.Succeeded)
                 {
                     // VENUE SAVING LOGIC
-                    // ==========================================
-
                     // 1. Wipe the old venue links to start fresh
                     var oldVenues = db.TeacherVenues.Where(tv => tv.TeacherId == user.Id).ToList();
                     db.TeacherVenues.RemoveRange(oldVenues);
@@ -293,9 +333,7 @@ namespace SwimmingSchool_Implementation.Controllers
             var user = await UserManager.FindByIdAsync(id);
             if (user == null) return HttpNotFound();
 
-            // ==========================================
             // 1. CLEANUP ACTIVE ASSIGNMENTS
-            // ==========================================
             // Remove all Venue associations so they don't show up in venue searches
             var relatedVenues = db.TeacherVenues.Where(tv => tv.TeacherId == user.Id).ToList();
             if (relatedVenues.Any())
@@ -304,9 +342,7 @@ namespace SwimmingSchool_Implementation.Controllers
                 db.SaveChanges();
             }
 
-            // ==========================================
             // 2. THE SOFT DELETE (Role Swap & Lockout)
-            // ==========================================
 
             // A. Remove their Teacher status (This hides them from your dashboard lists!)
             if (await UserManager.IsInRoleAsync(user.Id, "Teacher"))
@@ -318,7 +354,6 @@ namespace SwimmingSchool_Implementation.Controllers
             await UserManager.SetLockoutEnabledAsync(user.Id, true);
             await UserManager.SetLockoutEndDateAsync(user.Id, DateTimeOffset.MaxValue);
 
-            // ==========================================
 
             TempData["SuccessMessage"] = "Teacher successfully archived! Their login has been disabled and they have been removed from the directory, but past lesson records are safely preserved.";
 
@@ -337,22 +372,94 @@ namespace SwimmingSchool_Implementation.Controllers
         // GET: /Manager/Students
         public ActionResult Students()
         {
-            // Includes the parent/account holder data so managers can see who to call
-            var students = db.Students.Include(s => s.Bookings.Select(b => b.User)).ToList();
-            return View(students);
+            var today = DateTime.Today;
+
+            // Fetch all students and eager-load their bookings, parents, and classes
+            var studentsQuery = db.Students
+                .Include(s => s.Bookings.Select(b => b.User))
+                .Include(s => s.Bookings.Select(b => b.LessonsBookings.Select(lb => lb.Lesson.Venue)))
+                .ToList();
+
+            var model = studentsQuery.Select(s => new StudentDirectoryViewModel
+            {
+                StudentId = s.Id,
+                FullName = s.FirstName + " " + s.SecondName,
+                Gender = s.Gender,
+
+                // Inline accurate age calculation
+                Age = (today.Year - s.DateOfBirth.Year) - (s.DateOfBirth.Date > today.AddYears(-(today.Year - s.DateOfBirth.Year)) ? 1 : 0),
+
+                // Medical Mapping
+                MedicalConditions = s.MedicalConditions,
+                Allergies = s.Allergies,
+                Medications = s.Medications,
+                HasMedicalFlag = !string.IsNullOrWhiteSpace(s.MedicalConditions) ||
+                                 !string.IsNullOrWhiteSpace(s.Allergies) ||
+                                 !string.IsNullOrWhiteSpace(s.Medications),
+
+                // Find the parent linked to their first booking
+                ParentName = s.Bookings.FirstOrDefault()?.User != null
+                             ? s.Bookings.First().User.FirstName + " " + s.Bookings.First().User.SecondName
+                             : "Unknown",
+                ParentEmail = s.Bookings.FirstOrDefault()?.User?.Email ?? "N/A",
+                ParentPhone = s.Bookings.FirstOrDefault()?.User?.PhoneNumber ?? "N/A",
+
+                // Map out all the specific classes this student is attending
+                EnrolledClasses = s.Bookings.SelectMany(b => b.LessonsBookings.Select(lb => new StudentEnrolledClassViewModel
+                {
+                    ClassName = lb.Lesson.Title,
+                    Schedule = lb.Lesson.DayOfWeek + " at " + lb.Lesson.StartTime.ToString(@"hh\:mm"),
+                    VenueName = lb.Lesson.Venue?.Name ?? "Unknown",
+                    BookingStatus = b.Status.ToString()
+                })).ToList()
+
+            }).OrderBy(s => s.FullName).ToList();
+
+            return View(model);
         }
+
+        // GET: /Manager/AccountHolders
+        // ==========================================
+        // DIRECTORY MANAGEMENT
+        // ==========================================
 
         // GET: /Manager/AccountHolders
         public ActionResult AccountHolders()
         {
-            // Gets all registered users who have made at least one booking
-            var accountHolders = db.Users.Where(u => u.Bookings.Any()).ToList();
-            return View(accountHolders);
+            // Fetch any user who has made at least one booking, and eager-load the related students/lessons
+            var parentsQuery = db.Users
+                .Include(u => u.Bookings.Select(b => b.Student))
+                .Include(u => u.Bookings.Select(b => b.LessonsBookings.Select(lb => lb.Lesson)))
+                .Where(u => u.Bookings.Any())
+                .ToList();
+
+            var model = parentsQuery.Select(u => new AccountHolderDirectoryViewModel
+            {
+                UserId = u.Id,
+                FullName = u.FirstName + " " + u.SecondName,
+                Email = u.Email,
+                Phone = u.PhoneNumber ?? "No Phone Provided",
+                RegisteredDate = u.DateRegistered.ToString(),
+                TotalBookings = u.Bookings.Count,
+                TotalSpent = u.Bookings.Sum(b => b.AmountPaid),
+
+                // Map out their specific kids and classes
+                Bookings = u.Bookings.OrderByDescending(b => b.BookingDate).Select(b => new AccountHolderBookingViewModel
+                {
+                    BookingId = b.BookingId,
+                    BookingDate = b.BookingDate.ToString("MMM dd, yyyy"),
+                    StudentName = b.Student != null ? b.Student.FirstName + " " + b.Student.SecondName : "Unknown Swimmer",
+                    ClassName = b.LessonsBookings.FirstOrDefault()?.Lesson?.Title ?? "Unknown Class",
+                    AmountPaid = b.AmountPaid,
+                    Status = b.Status.ToString()
+                }).ToList()
+
+            }).OrderByDescending(a => a.RegisteredDate).ToList();
+
+            return View(model);
         }
 
         // 3. BOOKINGS & TIMETABLE
-        // ==========================================
-
         // GET: /Manager/Bookings
         public ActionResult Bookings()
         {
@@ -402,16 +509,94 @@ namespace SwimmingSchool_Implementation.Controllers
         }
 
         // ==========================================
-        // 4. REPORTS & EXPORTS
+        // REPORTS & EXPORTS
         // ==========================================
 
         // GET: /Manager/Reports
-        public ActionResult Reports()
+        public ActionResult Reports(DateTime? startDate, DateTime? endDate)
         {
-            return View();
+            // Default to the current month if no dates are provided
+            DateTime start = startDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            DateTime end = endDate ?? DateTime.Today;
+
+            // Fetch the bookings within the timeframe
+            var bookingsQuery = db.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Student)
+                .Include(b => b.LessonsBookings.Select(lb => lb.Lesson))
+                .Where(b => DbFunctions.TruncateTime(b.BookingDate) >= start.Date
+                         && DbFunctions.TruncateTime(b.BookingDate) <= end.Date)
+                .OrderByDescending(b => b.BookingDate)
+                .ToList();
+
+            var model = new ReportDashboardViewModel
+            {
+                StartDate = start,
+                EndDate = end,
+                TotalBookings = bookingsQuery.Count,
+                TotalRevenue = bookingsQuery.Sum(b => b.AmountPaid),
+
+                // Map the data for the preview table
+                PreviewData = bookingsQuery.Select(b => new ReportRowViewModel
+                {
+                    BookingId = b.BookingId,
+                    BookingDate = b.BookingDate.ToString("yyyy-MM-dd"),
+                    AccountHolder = b.User != null ? b.User.FirstName + " " + b.User.SecondName : "Unknown",
+                    AccountEmail = b.User?.Email ?? "N/A",
+                    StudentName = b.Student != null ? b.Student.FirstName + " " + b.Student.SecondName : "Unknown",
+
+                    // Grab the first lesson's title safely
+                    ClassDetails = b.LessonsBookings.FirstOrDefault()?.Lesson?.Title ?? "Unknown Class",
+
+                    PaymentStatus = b.Status.ToString(),
+                    AmountPaid = b.AmountPaid,
+                    TotalAmount = b.TotalAmount
+                }).ToList()
+            };
+
+            return View(model);
         }
 
-        // (We will add the PDF/Excel generation methods here later)
+        // GET: /Manager/ExportBookingsCsv
+        public ActionResult ExportBookingsCsv(DateTime startDate, DateTime endDate)
+        {
+            // 1. Fetch the exact same data based on the dates
+            var bookings = db.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Student)
+                .Include(b => b.LessonsBookings.Select(lb => lb.Lesson))
+                .Where(b => DbFunctions.TruncateTime(b.BookingDate) >= startDate.Date
+                         && DbFunctions.TruncateTime(b.BookingDate) <= endDate.Date)
+                .OrderByDescending(b => b.BookingDate)
+                .ToList();
+
+            // 2. Build the CSV String using StringBuilder
+            var builder = new System.Text.StringBuilder();
+
+            // Add the Column Headers
+            builder.AppendLine("Booking ID,Booking Date,Account Holder,Email,Student Name,Class,Status,Amount Paid,Total Price");
+
+            // Loop through data and add rows
+            foreach (var b in bookings)
+            {
+                string date = b.BookingDate.ToString("yyyy-MM-dd");
+                string account = b.User != null ? $"{b.User.FirstName} {b.User.SecondName}" : "Unknown";
+                string email = b.User?.Email ?? "";
+                string student = b.Student != null ? $"{b.Student.FirstName} {b.Student.SecondName}" : "Unknown";
+                string lesson = b.LessonsBookings.FirstOrDefault()?.Lesson?.Title ?? "Unknown";
+
+                // We wrap strings in quotes so if a name contains a comma, it doesn't break the Excel columns
+                builder.AppendLine($"\"{b.BookingId}\",\"{date}\",\"{account}\",\"{email}\",\"{student}\",\"{lesson}\",\"{b.Status}\",\"{b.AmountPaid}\",\"{b.TotalAmount}\"");
+            }
+
+            // 3. Return the string as a downloadable file
+            byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(builder.ToString());
+            string fileName = $"BookingsReport_{startDate:yyyyMMdd}_to_{endDate:yyyyMMdd}.csv";
+
+            // "text/csv" tells the browser to treat this as an Excel-compatible spreadsheet
+            return File(fileBytes, "text/csv", fileName);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -419,6 +604,198 @@ namespace SwimmingSchool_Implementation.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+
+        // ==========================================
+        // LESSON MANAGEMENT CRUD
+        // ==========================================
+
+        // GET: /Manager/Lessons
+        public ActionResult Lessons()
+        {
+            var today = DateTime.Today;
+
+            // Fetch all lessons and include the foreign key data
+            var allLessons = db.Lessons
+                .Include(l => l.Teacher)
+                .Include(l => l.Venue)
+                .ToList();
+
+            var model = new LessonManagementViewModel
+            {
+                // Active: Block starts today or in the future
+                ActiveLessons = allLessons
+                    .Where(l => l.BlockStartDate >= today)
+                    .OrderBy(l => l.BlockStartDate)
+                    .ToList(),
+
+                // Past: Block started before today
+                PastLessons = allLessons
+                    .Where(l => l.BlockStartDate < today)
+                    .OrderByDescending(l => l.BlockStartDate)
+                    .ToList()
+            };
+
+            return View(model);
+        }
+
+        // GET: /Manager/CreateLesson
+        public ActionResult CreateLesson()
+        {
+            PopulateLessonDropdowns();
+            return View();
+        }
+
+        // POST: /Manager/CreateLesson
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateLesson(Lesson lesson)
+        {
+            if (ModelState.IsValid)
+            {
+                // CRITICAL: Set available places to match the capacity they just typed in
+                lesson.AvailablePlaces = lesson.Capacity;
+
+                db.Lessons.Add(lesson);
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "New lesson successfully created!";
+                return RedirectToAction("Lessons");
+            }
+
+            PopulateLessonDropdowns(lesson.UserId, lesson.VenueId);
+            return View(lesson);
+        }
+
+        // GET: /Manager/EditLesson/5
+        public ActionResult EditLesson(int? id)
+        {
+            if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            Lesson lesson = db.Lessons.Find(id);
+            if (lesson == null) return HttpNotFound();
+
+            // Security Check: Prevent editing of past lessons by URL manipulation
+            if (lesson.BlockStartDate < DateTime.Today)
+            {
+                TempData["ErrorMessage"] = "You cannot edit a lesson that has already started.";
+                return RedirectToAction("Lessons");
+            }
+
+            PopulateLessonDropdowns(lesson.UserId, lesson.VenueId);
+            return View(lesson);
+        }
+
+        // POST: /Manager/EditLesson/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditLesson(Lesson submittedLesson)
+        {
+            if (ModelState.IsValid)
+            {
+                // 1. Fetch the ORIGINAL lesson from the database so we can do the math safely
+                var existingLesson = db.Lessons.Find(submittedLesson.Id);
+
+                if (existingLesson == null)
+                    return HttpNotFound();
+
+                // 2. THE MATH LOGIC
+                // Calculate exactly how many students are currently occupying seats
+                int spotsTaken = existingLesson.Capacity - existingLesson.AvailablePlaces;
+
+                // 3. THE SAFETY CHECK
+                // Block the manager if they try to shrink the class smaller than the booked kids
+                if (submittedLesson.Capacity < spotsTaken)
+                {
+                    ModelState.AddModelError("Capacity", $"You cannot reduce the maximum capacity to {submittedLesson.Capacity}. There are already {spotsTaken} swimmer(s) booked into this class. Please cancel their bookings first.");
+
+                    PopulateLessonDropdowns(submittedLesson.UserId, submittedLesson.VenueId);
+                    return View(submittedLesson);
+                }
+
+                // 4. THE LIVE RECALCULATION
+                // Automatically adjust the available places based on the new capacity
+                existingLesson.AvailablePlaces = submittedLesson.Capacity - spotsTaken;
+
+                // 5. Update the rest of the fields manually to prevent overwriting bugs
+                existingLesson.Title = submittedLesson.Title;
+                existingLesson.AgeGroup = submittedLesson.AgeGroup;
+                existingLesson.LessonType = submittedLesson.LessonType;
+                existingLesson.Price = submittedLesson.Price;
+                existingLesson.BlockStartDate = submittedLesson.BlockStartDate;
+                existingLesson.DayOfWeek = submittedLesson.DayOfWeek;
+                existingLesson.StartTime = submittedLesson.StartTime;
+                existingLesson.DurationInMinutes = submittedLesson.DurationInMinutes;
+                existingLesson.Capacity = submittedLesson.Capacity;
+                existingLesson.VenueId = submittedLesson.VenueId;
+                existingLesson.UserId = submittedLesson.UserId;
+
+                // 6. Save changes
+                db.SaveChanges();
+                TempData["SuccessMessage"] = "Lesson capacity and details updated successfully!";
+                return RedirectToAction("Lessons");
+            }
+
+            // If model state is invalid, return the view
+            PopulateLessonDropdowns(submittedLesson.UserId, submittedLesson.VenueId);
+            return View(submittedLesson);
+        }
+
+        // POST: /Manager/DeleteLesson/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteLesson(int id)
+        {
+            Lesson lesson = db.Lessons.Find(id);
+            if (lesson != null)
+            {
+                if (lesson.BlockStartDate < DateTime.Today)
+                {
+                    TempData["ErrorMessage"] = "Cannot delete past lessons. They are kept for historical records.";
+                    return RedirectToAction("Lessons");
+                }
+
+                try
+                {
+                    db.Lessons.Remove(lesson);
+                    db.SaveChanges();
+                    TempData["SuccessMessage"] = "Lesson successfully deleted.";
+                }
+                catch (Exception)
+                {
+                    // This catches the SQL constraint error if they try to delete a class that parents have already booked!
+                    TempData["ErrorMessage"] = "Cannot delete this lesson because students are already booked into it. Please cancel the bookings first.";
+                }
+            }
+            return RedirectToAction("Lessons");
+        }
+
+        // --- HELPER METHOD FOR DROPDOWNS ---
+        private void PopulateLessonDropdowns(string selectedTeacherId = null, int? selectedVenueId = null)
+        {
+            // 1. Get Venues
+            ViewBag.VenueId = new SelectList(db.Venues, "VenueId", "Name", selectedVenueId);
+
+            // 2. Get Teachers (Filter by the exact Teacher Role ID in your database)
+            var teacherRole = db.Roles.FirstOrDefault(r => r.Name == "Teacher");
+            if (teacherRole != null)
+            {
+                var teachers = db.Users.Where(u => u.Roles.Any(r => r.RoleId == teacherRole.Id)).ToList();
+
+                // Assuming your User model has FirstName and SecondName
+                var teacherSelectList = teachers.Select(t => new SelectListItem
+                {
+                    Value = t.Id,
+                    Text = t.FirstName + " " + t.SecondName,
+                    Selected = (t.Id == selectedTeacherId)
+                });
+
+                ViewBag.UserId = teacherSelectList;
+            }
+            else
+            {
+                ViewBag.UserId = new SelectList(new List<SelectListItem>());
+            }
         }
     }
 
